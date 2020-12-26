@@ -61,8 +61,57 @@ def add_details():
     details_entry = Entry(root)
     details_entry.grid(row=1, column=1,ipadx=70, ipady = 70,padx=50,pady=50)
 
+    submit_button = Button(root, text = "Submit", command = lambda: add_hours(details_text, details_entry, submit_button))
+    submit_button.grid(row=2, column=1, padx=50,pady=50)
+
+    #add_hours(details_text, submit_button)
+    # add_dates()
+
+def destroy(*widgets):
+    for item in widgets:
+        item.destroy()
+
+def add_hours(*widgets):
+
+    destroy(*widgets)
+
+    hours_text = Label(root, text = "How many hours did this take?")
+    hours_text.grid(row=0,column=1,padx=50,pady=10)
+
+    hours_entry = Entry(root)
+    hours_entry.grid(row=1, column=1,ipadx=10, ipady = 10,padx=50,pady=50)
+
+    submit_button = Button(root, text = "Submit", command = lambda: add_dates(hours_text, hours_entry, submit_button))
+    submit_button.grid(row=2, column=1, padx=50,pady=50)
+
+def add_dates(*widgets):
+
+    destroy(*widgets)
+
+    dates_text = Label(root, text = "Did this take place over the span of one day or multiple days?")
+    dates_text.grid(row=0,column=1,padx=50,pady=10)
+
+    one_day_button = Button(root, text = "One day")
+    one_day_button.grid(row=2, column=1, padx=50,pady=50)
+
+    m_days_button = Button(root, text = "Multiple days", command = lambda: multiple_days_option(dates_text, one_day_button, m_days_button))
+    m_days_button.grid(row=3, column=1, padx=50, pady=50)
+
+def multiple_days_option(*widgets):
+
+    destroy(*widgets)
+
+    days_text = Label(root, text = "What days did this take place (eg. 25/12/2020 - 01/01/2021)" )
+    days_text.grid(row=0,column=1,padx=50,pady=10)
+
+    days_entry = Entry(root)
+    days_entry.grid(row=1,column=1,padx=50,pady=10)
+
     submit_button = Button(root, text = "Submit")
     submit_button.grid(row=2, column=1, padx=50,pady=50)
+
+def print_value(e):
+    print(e.get())
 
 def modify_log():
     pass
