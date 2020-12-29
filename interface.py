@@ -47,9 +47,6 @@ def to_datetime(results):
             vol.update_one({'_id': result['_id']}, {'$set': {'enddate': end_datetime}})
 
 def add_details():
-    print("Is there one date or does it span over more than one day?")
-    print("Give some details about the experience.")
-    print("How many hours did this take?")
 
     menu_label.destroy()
     add_record_1.destroy()
@@ -116,7 +113,7 @@ def one_day_option(user_list, *widgets):
     day_entry.grid(row=1,column=1,padx=50,pady=10)
 
     submit_button = Button(root, text = "Submit", 
-        command = lambda: all_user_inputs(user_list, day_entry.get(), day_text, day_entry, submit_button))
+        command = lambda: all_user_inputs(user_list, day_text, day_entry, submit_button, date = day_entry.get()))
     submit_button.grid(row=2, column=1, padx=50,pady=50)
 
 
@@ -128,17 +125,40 @@ def multiple_days_option(user_list, *widgets):
     days_text = Label(root, text = "What days did this take place (eg. 25/12/2020 - 01/01/2021)" )
     days_text.grid(row=0,column=1,padx=50,pady=10)
 
-    days_entry = Entry(root)
-    days_entry.grid(row=1,column=1,padx=50,pady=10)
+    start_day_text = Label(root, text = "Start date:")
+    start_day_text.grid(row=1,column=1, padx=50, pady=10)
+
+    start_day_entry = Entry(root)
+    start_day_entry.grid(row=2,column=1,padx=50,pady=10)
+
+    end_day_text = Label(root, text = "End date:")
+    end_day_text.grid(row=3, column=1, padx=50, pady=10)
+
+    end_day_entry = Entry(root)
+    end_day_entry.grid(row=4, column=1, padx=50, pady=10)
+
 
     submit_button = Button(root, text = "Submit", 
-        command = lambda: all_user_inputs(user_list, days_entry.get(), days_text, days_entry, submit_button))
-    submit_button.grid(row=2, column=1, padx=50,pady=50)
+        command = lambda: all_user_inputs(user_list, days_text, start_day_text, end_day_text, 
+            start_day_entry, end_day_entry, submit_button, 
+            startdate = start_day_entry.get(), enddate = end_day_entry.get() ))
 
-def all_user_inputs(user_list,days,*widgets):
+
+    submit_button.grid(row=5, column=1, padx=50,pady=50)
+
+def all_user_inputs(user_list, *widgets, **days):
 
     destroy(*widgets)
-    user_list.append(days)
+
+    # add date(s)
+    for key, value in days.items():
+        if key == "date":
+            user_list.append(value)
+        else:
+            user_list.append(days["startdate"])
+            user_list.append(days["enddate"])
+            break
+
     print(user_list)
     #return user_list
 
@@ -155,6 +175,16 @@ def add_test(user_list):
 
 def modify_log():
     pass
+
+def view_log():
+    # tdl (to do later): add previous and next buttons
+    # fix - one date also shows 00:00:00
+    results = vol.find().limit(5)
+    for result in results:
+       # date = Label(root, text = result['date'].strftime("%m/%d/%Y"))
+        print(result['date'])
+
+    # {'_id': ObjectId('5fe2adc955957e2ab04be27c'), 'date': datetime.datetime(2017, 8, 24, 0, 0), 'details': 'Principal Breakfast Volunteer', 'hours': 3}
 
 def main():
     global root, test_label, client, db, vol
@@ -183,7 +213,7 @@ def main():
 
     print(add_record_1)
 
-    view_2 = Button(root, text = "View activity log", padx = 50, pady=10)
+    view_2 = Button(root, text = "View activity log", padx = 50, pady=10, command = lambda: view_log())
     view_2.grid(row=3, column=1)
 
     #test_label.pack()
@@ -202,3 +232,4 @@ main()
 #print(len("04/09/2017 - 05/09/2017"))
 # 23
 # test(results)
+
