@@ -12,7 +12,9 @@ print("MENU:")
 def display_results(results):
     for index, result in enumerate(results, start = 1):
         print('Result', index)
-        print('DATE: ', result['date'])
+
+        date = result['date']
+        print('DATE: ', date[:10]) if isinstance(date, str) and len(date) == 24 else print('DATE: ', date)
         print('DETAILS: ', result['details'])
         print('NUMBER OF HOURS: ', result['hours'], '\n')
 
@@ -22,8 +24,8 @@ def sort_by_factor():
 def search_keywords():
     keyword = '.*stu.*' # wildcard characters in between
     #user_keyword = input('What keyword would you like to search? ')
-    results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
-
+   # results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
+    results = vol.find({'hours': 0.5, 'details': 'Interact Club Meeting'})
     display_results(results)
 
 def alter_date_format():
@@ -176,13 +178,32 @@ def add_test(user_list):
 def modify_log():
     pass
 
-def view_log():
+def view_log(*widgets, skip_num=0):
+
+    destroy(*widgets)
     # tdl (to do later): add previous and next buttons
-    # fix - one date also shows 00:00:00
-    results = vol.find().limit(5)
+   
+    results = vol.find().skip(skip_num).limit(1)
+    row_num = 0
+
     for result in results:
-       # date = Label(root, text = result['date'].strftime("%m/%d/%Y"))
-        print(result['date'])
+        skip_num +=1
+
+        date = Label(root, text = result['date'] if isinstance(result['date'], str) else result['date'].strftime("%d/%m/%Y"))
+        date.grid(row=row_num, column=1, padx=10, pady=10)
+        row_num +=1
+
+        details = Label(root, text = "Details: " + result['details'])
+        details.grid(row = row_num, column =1, padx=10, pady=10)
+        row_num +=1
+
+        hours = Label(root, text = "Hours: " + str(result['hours']))
+        hours.grid(row = row_num, column=1, padx=10, pady=10)
+        row_num +=1
+
+        
+    next_button = Button(root, text = "Next", command = lambda: view_log(date, details, hours, next_button, skip_num = skip_num))
+    next_button.grid(row = row_num, column=1, padx=10, pady=10)
 
     # {'_id': ObjectId('5fe2adc955957e2ab04be27c'), 'date': datetime.datetime(2017, 8, 24, 0, 0), 'details': 'Principal Breakfast Volunteer', 'hours': 3}
 
@@ -211,9 +232,10 @@ def main():
     add_record_1 = Button(root, text = "Add a new log record", padx = 50, pady=10, command=lambda: add_details())
     add_record_1.grid(row=2, column=1)
 
-    print(add_record_1)
+    search_keywords()
 
-    view_2 = Button(root, text = "View activity log", padx = 50, pady=10, command = lambda: view_log())
+    view_2 = Button(root, text = "View activity log", padx = 50, pady=10, 
+        command = lambda: view_log(menu_label, add_record_1, view_2))
     view_2.grid(row=3, column=1)
 
     #test_label.pack()
