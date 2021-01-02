@@ -1,5 +1,6 @@
 from pymongo import MongoClient
-from tkinter import * # will be used to create graphical user interface later
+from tkinter import *
+from tkinter import messagebox
 from datetime import datetime
 
 
@@ -87,6 +88,12 @@ def add_hours(details, *widgets):
 
 def add_dates(user_list, hours,*widgets):
 
+    try:
+        int(hours)
+    except:
+        messagebox.showerror("Hours Error", "Please enter a number for your hours.")
+        return # exit the function
+
     destroy(*widgets)
 
     user_list.append(hours)
@@ -148,20 +155,45 @@ def multiple_days_option(user_list, *widgets):
 
     submit_button.grid(row=5, column=1, padx=50,pady=50)
 
+
+def check_date(date):
+    if len(date.strip()) == 10:
+        print(date[7:])
+        print(date[4:6])
+        print(date[1:3])
+        check_date = datetime.datetime.strptime(date, "%d/%m/%Y") #type object 'datetime.datetime' has no attribute 'datetime'
+    else:
+        raise NameError # custom error?
+
+
+
+
 def all_user_inputs(user_list, *widgets, **days):
 
-    destroy(*widgets)
+    try:
 
-    # add date(s)
-    for key, value in days.items():
-        if key == "date":
-            user_list.append(value)
-        else:
-            user_list.append(days["startdate"])
-            user_list.append(days["enddate"])
-            break
+        # add date(s)
+        for key, value in days.items():
+            if key == "date":
+                check_date(value)
+                user_list.append(value)
 
-    print(user_list)
+            else:
+                user_list.append(days["startdate"])
+                user_list.append(days["enddate"])
+                break
+
+
+           # destroy(*widgets)
+        print(user_list)
+    except NameError:
+        messagebox.showerror("Dates Error", "Please enter a valid date.")
+    except Exception as e:
+        print(e)
+        messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
+        return # exit the function
+
+
     #return user_list
 
 
@@ -254,4 +286,5 @@ main()
 #print(len("04/09/2017 - 05/09/2017"))
 # 23
 # test(results)
+
 
