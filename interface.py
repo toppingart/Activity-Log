@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from tkinter import *
 from tkinter import messagebox
 from datetime import datetime
-
+import sys
 
 
 print("=======================================================================")
@@ -72,6 +72,11 @@ def destroy(*widgets):
         item.destroy()
 
 def add_hours(details, *widgets):
+
+
+    if len(details.strip()) == 0:
+        messagebox.showerror("Details Error", "Please enter some details.")
+        return
 
     user_input_list = [details] # obtained from add_details()
     destroy(*widgets)
@@ -150,23 +155,37 @@ def multiple_days_option(user_list, *widgets):
     submit_button = Button(root, text = "Submit", 
         command = lambda: all_user_inputs(user_list, days_text, start_day_text, end_day_text, 
             start_day_entry, end_day_entry, submit_button, 
-            startdate = start_day_entry.get(), enddate = end_day_entry.get() ))
+            startdate = start_day_entry.get(), enddate = end_day_entry.get()))
 
 
     submit_button.grid(row=5, column=1, padx=50,pady=50)
 
 
 def check_date(date):
-    if len(date.strip()) == 10:
-        print(date[7:])
-        print(date[4:6])
-        print(date[1:3])
-        check_date = datetime.datetime.strptime(date, "%d/%m/%Y") #type object 'datetime.datetime' has no attribute 'datetime'
-    else:
-        raise NameError # custom error?
+    try:
+        if len(date.strip()) == 10:
+            check_date = datetime.strptime(date, "%d/%m/%Y") 
+        else:
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Date Error", "Please enter a valid date.")
+        raise Exception
 
 
+def successful_message(*widgets):
 
+    destroy(*widgets)
+
+    success_message = Label(root, text = "The record has been successfully added to the database!")
+    success_message.grid(row=1, column=1)
+
+    # exit and go back to menu
+    exit_button= Button(root, text = "Exit", command = lambda: sys.exit()) # if pressed, exits the program
+    exit_button.grid(row=2, column = 1)
+
+    back_to_menu_button = Button(root, text = "Back to menu", 
+        command = lambda: menu(success_message, exit_button, back_to_menu_button))
+    back_to_menu_button.grid(row=3, column=1)
 
 def all_user_inputs(user_list, *widgets, **days):
 
@@ -177,6 +196,7 @@ def all_user_inputs(user_list, *widgets, **days):
             if key == "date":
                 check_date(value)
                 user_list.append(value)
+                break
 
             else:
                 user_list.append(days["startdate"])
@@ -186,12 +206,19 @@ def all_user_inputs(user_list, *widgets, **days):
 
            # destroy(*widgets)
         print(user_list)
+        successful_message(*widgets)
+
     except NameError:
         messagebox.showerror("Dates Error", "Please enter a valid date.")
-    except Exception as e:
-        print(e)
-        messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
-        return # exit the function
+
+    except Exception:
+        # messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
+        return
+
+  #  except Exception as e:
+   #     print(e)
+    #    messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
+     #   return # exit the function
 
 
     #return user_list
@@ -239,7 +266,27 @@ def view_log(*widgets, skip_num=0):
 
     # {'_id': ObjectId('5fe2adc955957e2ab04be27c'), 'date': datetime.datetime(2017, 8, 24, 0, 0), 'details': 'Principal Breakfast Volunteer', 'hours': 3}
 
+
+def menu(*widgets):
+
+    destroy(*widgets)
+    
+    global menu_label, add_record_1, view_2
+    menu_label = Label(root, text="MENU")
+    menu_label.grid(row=0,column=1,padx=50,pady=10)    
+
+    add_record_1 = Button(root, text = "Add a new log record", padx = 50, pady=10, command=lambda: add_details())
+    add_record_1.grid(row=2, column=1)
+
+    search_keywords()
+
+    view_2 = Button(root, text = "View activity log", padx = 50, pady=10, 
+        command = lambda: view_log(menu_label, add_record_1, view_2))
+    view_2.grid(row=3, column=1)
+
 def main():
+
+
     global root, test_label, client, db, vol
 
     root = Tk()
@@ -257,19 +304,7 @@ def main():
 
     results = vol.find()
 
-    global menu_label, add_record_1, view_2
-    menu_label = Label(root, text="MENU")
-    menu_label.grid(row=0,column=1,padx=50,pady=10)    
-
-    add_record_1 = Button(root, text = "Add a new log record", padx = 50, pady=10, command=lambda: add_details())
-    add_record_1.grid(row=2, column=1)
-
-    search_keywords()
-
-    view_2 = Button(root, text = "View activity log", padx = 50, pady=10, 
-        command = lambda: view_log(menu_label, add_record_1, view_2))
-    view_2.grid(row=3, column=1)
-
+    menu()
     #test_label.pack()
     root.mainloop()
 
@@ -286,5 +321,6 @@ main()
 #print(len("04/09/2017 - 05/09/2017"))
 # 23
 # test(results)
+
 
 
