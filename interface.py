@@ -10,6 +10,15 @@ print("ACTIVITY LOG")
 print("=======================================================================")
 
 print("MENU:")
+
+
+"""
+The results of the database is displayed (when the user chooses to view the activity log)
+
+Input: a list of the result(s)
+Output: None
+
+"""
 def display_results(results):
     for index, result in enumerate(results, start = 1):
         print('Result', index)
@@ -22,6 +31,13 @@ def display_results(results):
 def sort_by_factor():
     pass
 
+"""
+The user enters one or more keywords to narrow down the results (when looking for a specific record).
+
+Input: None
+Output: None
+
+"""
 def search_keywords():
     keyword = '.*stu.*' # wildcard characters in between
     #user_keyword = input('What keyword would you like to search? ')
@@ -34,6 +50,13 @@ def alter_date_format():
     # https://www.programiz.com/python-programming/datetime/strptime
 
 
+"""
+Used to change the date (as a string) to a datetime object.
+
+Input: the results (dictionaries in a list)
+Output: None
+
+"""
 def to_datetime(results):
     for result in results:
         date = result['date']
@@ -48,6 +71,16 @@ def to_datetime(results):
             end_datetime = datetime.strptime(end_date, "%d/%m/%Y")
             vol.update_one({'_id': result['_id']}, {'$set': {'startdate': start_datetime}})
             vol.update_one({'_id': result['_id']}, {'$set': {'enddate': end_datetime}})
+
+
+"""
+The user enters some details about their experience.
+
+Input: None
+Output: None
+
+Note: The user exits this function when the SUBMIT button is pressed (the user is then sent to add_hours())
+"""
 
 def add_details():
 
@@ -67,9 +100,28 @@ def add_details():
     #add_hours(details_text, submit_button)
     # add_dates()
 
+
+"""
+The widgets are destroyed so that the other widgets can be placed on the screen.
+
+Input: Any number of widgets (*args) which will be in a list
+Output: None
+
+"""
 def destroy(*widgets):
     for item in widgets:
         item.destroy()
+
+
+"""
+The user is asked to enter the number of hours of their experience (how long did their volunteering/activity take?)
+
+Input: the details of the experience (as a string), any number of widgets that was on the screen when the user 
+was asked to enter the details (all the widgets from the add_details())
+
+Output: None
+
+"""
 
 def add_hours(details, *widgets):
 
@@ -91,31 +143,65 @@ def add_hours(details, *widgets):
         command = lambda: add_dates(user_input_list, hours_entry.get(), hours_text, hours_entry, submit_button))
     submit_button.grid(row=2, column=1, padx=50,pady=50)
 
+
+"""
+There are two purposes:
+1. Checks if the hours that the user has entered is valid (is an integer), otherwise the user will 
+be asked to enter their hours again.
+
+2. If the hours that the user has entered is valid, then the user will be asked to select if their experience/activity
+spans over a day or multiple days by clicking one of the buttons.
+
+Input: 
+- user_list: a list of the user's inputs so far (which in this case, would be the details and the hours)
+- hours: the user's input - ideally as an int, but will be checked if it is an integer
+- Any number of widgets from add_hours() to be destroyed 
+
+Output: None
+
+"""
+
 def add_dates(user_list, hours,*widgets):
 
     try:
-        int(hours)
+        int(hours) # checks if an integer has been entered 
     except:
         messagebox.showerror("Hours Error", "Please enter a number for your hours.")
-        return # exit the function
+        return # exits the function (so that the user can enter the number of hours again)
 
     destroy(*widgets)
-
-    user_list.append(hours)
+    user_list.append(hours) # if hours is an int (is valid), it is added to the list of user inputs
   
-
     dates_text = Label(root, text = "Did this take place over the span of one day or multiple days?")
     dates_text.grid(row=0,column=1,padx=50,pady=10)
 
+    # first option the user can select 
     one_day_button = Button(root, text = "One day", 
         command = lambda: one_day_option(user_list, dates_text, one_day_button, m_days_button))
+
     one_day_button.grid(row=2, column=1, padx=50,pady=50)
 
+    # second option the user can select 
     m_days_button = Button(root, text = "Multiple days", 
         command = lambda: multiple_days_option(user_list, dates_text, one_day_button, m_days_button))
 
     m_days_button.grid(row=3, column=1, padx=50, pady=50)
 
+
+
+"""
+There are two purposes.
+1. Destroys the widgets from add_dates()
+2. Allows the user to enter the day that the experience/activity took place on (as a string)
+
+Input: 
+- user_list: a list of the user's inputs so far (in this case, the details and hours). It will not be used in the function
+itself, but will be used in the all_user_inputs()
+- Any number of widgets to be destroyed
+
+Output: None
+
+"""
 def one_day_option(user_list, *widgets):
 
     destroy(*widgets)
@@ -123,7 +209,7 @@ def one_day_option(user_list, *widgets):
     day_text = Label(root, text = "What day did this take place (eg. 25/12/2020) ")
     day_text.grid(row=0,column=1,padx=50,pady=10)
 
-    day_entry = Entry(root)
+    day_entry = Entry(root) # textbox
     day_entry.grid(row=1,column=1,padx=50,pady=10)
 
     submit_button = Button(root, text = "Submit", 
@@ -321,6 +407,5 @@ main()
 #print(len("04/09/2017 - 05/09/2017"))
 # 23
 # test(results)
-
 
 
