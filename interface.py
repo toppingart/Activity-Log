@@ -217,6 +217,19 @@ def one_day_option(user_list, *widgets):
     submit_button.grid(row=2, column=1, padx=50,pady=50)
 
 
+"""
+There are two purposes.
+1. Destroys the widgets from add_dates()
+2. Allows the user to enter the start date and the end date that the experience/activity took place on (as a string)
+
+Input: 
+- user_list: a list of the user's inputs so far (in this case, the details and hours). It will not be used in the function
+itself, but will be used in the all_user_inputs()
+- Any number of widgets to be destroyed
+
+Output: None
+
+"""
 
 def multiple_days_option(user_list, *widgets):
 
@@ -246,6 +259,13 @@ def multiple_days_option(user_list, *widgets):
 
     submit_button.grid(row=5, column=1, padx=50,pady=50)
 
+"""
+Checks if the date entered by the user is a valid date (valid day, month, and year).
+
+Input: the date (as a string)
+Output: None
+
+"""
 
 def check_date(date):
     try:
@@ -254,9 +274,18 @@ def check_date(date):
         else:
             raise ValueError
     except ValueError:
-        messagebox.showerror("Date Error", "Please enter a valid date.")
+        messagebox.showerror("Date(s) Error", "Check that the date(s) you have entered are valid.")
         raise Exception
 
+"""
+There are two purposes.
+1. Informs the user that the experience/activity record has been successfully added to the database. 
+2. The user is then presented with two buttons: one that exists the program and the other takes them back to the menu screen.
+
+Input: Any number of widgets to be destroyed (these widgets are either from one_day_option() or multiple_days_options() )
+Output: None
+
+"""
 
 def successful_message(*widgets):
 
@@ -265,13 +294,26 @@ def successful_message(*widgets):
     success_message = Label(root, text = "The record has been successfully added to the database!")
     success_message.grid(row=1, column=1)
 
-    # exit and go back to menu
+    # exit option
     exit_button= Button(root, text = "Exit", command = lambda: sys.exit()) # if pressed, exits the program
     exit_button.grid(row=2, column = 1)
 
+    # go back to menu option
     back_to_menu_button = Button(root, text = "Back to menu", 
         command = lambda: menu(success_message, exit_button, back_to_menu_button))
     back_to_menu_button.grid(row=3, column=1)
+
+
+"""
+There are two purposes.
+1. If the date(s) are valid (which will be checked in this function), the date(s) will be added to the user_list 
+(that contains the details and the hours)
+
+2. Once the date is determined to be valid, the record is added to the database. (**INCORPORATE)
+
+REMINDER: the details and the hours are valid (as they have been checked before)
+
+"""
 
 def all_user_inputs(user_list, *widgets, **days):
 
@@ -284,8 +326,13 @@ def all_user_inputs(user_list, *widgets, **days):
                 user_list.append(value)
                 break
 
-            else:
-                user_list.append(days["startdate"])
+            else: # **CHECK IF THE TWO DATES ARE VALID
+                check_date(days["startdate"])
+
+                if len(user_list) == 3: # already contains the details, hours, and a start date (prevents repeated startdate)
+                    user_list.append(days["startdate"])
+
+                check_date(days["enddate"])
                 user_list.append(days["enddate"])
                 break
 
@@ -294,8 +341,8 @@ def all_user_inputs(user_list, *widgets, **days):
         print(user_list)
         successful_message(*widgets)
 
-    except NameError:
-        messagebox.showerror("Dates Error", "Please enter a valid date.")
+    #except NameError:
+      #  messagebox.showerror("Dates Error", "Please enter a valid date.")
 
     except Exception:
         # messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
@@ -323,10 +370,26 @@ def add_test(user_list):
 def modify_log():
     pass
 
+"""
+**NEEDS TO BE CHANGED. CURRENTLY DISPLAYS ONE RECORD (AND OTHER CHANGES...SEE BELOW)
+
+The date(s), details of the experience/activity, and the hour(s) are displayed on the screen.
+The user can click on the PREVIOUS and NEXT buttons to look through their records. 
+
+Input: 
+- Any number of widgets to be destroyed (from menu())
+- skip_num: the record that will be displayed
+
+Output: None
+
+"""
+
 def view_log(*widgets, skip_num=0):
 
     destroy(*widgets)
-    # tdl (to do later): add previous and next buttons
+
+    # **ADD PREVIOUS BUTTON
+    # ** ADD SEARCH KEYWORDS
    
     results = vol.find().skip(skip_num).limit(1)
     row_num = 0
@@ -352,7 +415,11 @@ def view_log(*widgets, skip_num=0):
 
     # {'_id': ObjectId('5fe2adc955957e2ab04be27c'), 'date': datetime.datetime(2017, 8, 24, 0, 0), 'details': 'Principal Breakfast Volunteer', 'hours': 3}
 
-
+"""
+Displays the menu where there are two buttons for the user to select from:
+1. The user can add a new log record (they have a new experience/activity to add)
+2. The user can view their current log (the records that they have at the moment)
+"""
 def menu(*widgets):
 
     destroy(*widgets)
@@ -364,11 +431,13 @@ def menu(*widgets):
     add_record_1 = Button(root, text = "Add a new log record", padx = 50, pady=10, command=lambda: add_details())
     add_record_1.grid(row=2, column=1)
 
-    search_keywords()
+    #search_keywords()
 
     view_2 = Button(root, text = "View activity log", padx = 50, pady=10, 
         command = lambda: view_log(menu_label, add_record_1, view_2))
     view_2.grid(row=3, column=1)
+
+
 
 def main():
 
@@ -407,5 +476,6 @@ main()
 #print(len("04/09/2017 - 05/09/2017"))
 # 23
 # test(results)
+
 
 
