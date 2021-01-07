@@ -326,14 +326,17 @@ def all_user_inputs(user_list, *widgets, **days):
                 user_list.append(value)
                 break
 
-            else: # **CHECK IF THE TWO DATES ARE VALID
+            else: 
                 check_date(days["startdate"])
 
-                if len(user_list) == 3: # already contains the details, hours, and a start date (prevents repeated startdate)
-                    user_list.append(days["startdate"])
+                if len(user_list) == 2: # already contains the details, hours
+                    user_list.append(days["startdate"]) # if statement prevents startdate from being added again
 
                 check_date(days["enddate"])
-                user_list.append(days["enddate"])
+
+                if len(user_list) == 3: # already contains details, hours, and startdate
+                    user_list.append(days["enddate"]) # if statement prevents enddate from being added again
+                
                 break
 
 
@@ -388,30 +391,46 @@ def view_log(*widgets, skip_num=0):
 
     destroy(*widgets)
 
+
     # **ADD PREVIOUS BUTTON
-    # ** ADD SEARCH KEYWORDS
+    # ** ADD SEARCH KEYWORDS (maybe in different function?)
    
-    results = vol.find().skip(skip_num).limit(1)
-    row_num = 0
+    try:
+        #results = vol.find().skip(skip_num).limit(1)
+        results = vol.find({'hours': 0.5, 'details': 'Interact Club Meeting'}).skip(skip_num).limit(1)
+        row_num = 0
 
-    for result in results:
-        skip_num +=1
+        for result in results:
+            skip_num +=1
 
-        date = Label(root, text = result['date'] if isinstance(result['date'], str) else result['date'].strftime("%d/%m/%Y"))
-        date.grid(row=row_num, column=1, padx=10, pady=10)
-        row_num +=1
+            date = Label(root, text = result['date'] if isinstance(result['date'], str) else result['date'].strftime("%d/%m/%Y"))
+            date.grid(row=row_num, column=1, padx=10, pady=10)
+            row_num +=1
 
-        details = Label(root, text = "Details: " + result['details'])
-        details.grid(row = row_num, column =1, padx=10, pady=10)
-        row_num +=1
+            details = Label(root, text = "Details: " + result['details'])
+            details.grid(row = row_num, column =1, padx=10, pady=10)
+            row_num +=1
 
-        hours = Label(root, text = "Hours: " + str(result['hours']))
-        hours.grid(row = row_num, column=1, padx=10, pady=10)
-        row_num +=1
+            hours = Label(root, text = "Hours: " + str(result['hours']))
+            hours.grid(row = row_num, column=1, padx=10, pady=10)
+            row_num +=1
 
-        
-    next_button = Button(root, text = "Next", command = lambda: view_log(date, details, hours, next_button, skip_num = skip_num))
-    next_button.grid(row = row_num, column=1, padx=10, pady=10)
+        # ** HANDLE ERROR ONCE USER REACHES THE END
+        next_button = Button(root, text = "Next", command = lambda: view_log(date, details, hours, next_button, skip_num = skip_num))
+        next_button.grid(row = row_num, column=2, padx=10, pady=10)
+
+        # ValueError: skip must be >= 0
+        previous_button = Button(root, text = "Previous", 
+        command = lambda: view_log(date, details, hours, previous_button, next_button, skip_num = skip_num - 2))
+        previous_button.grid(row = row_num, column=1, padx=10, pady=10)
+
+
+    except ValueError: # there are no "previous" posts to display (the user is currently viewing the first post)
+
+        # widgets have already been destroyed when the button is clicked (does not need to be added again)
+        # the default value of skip_num is 0
+        view_log() 
+
 
     # {'_id': ObjectId('5fe2adc955957e2ab04be27c'), 'date': datetime.datetime(2017, 8, 24, 0, 0), 'details': 'Principal Breakfast Volunteer', 'hours': 3}
 
@@ -476,6 +495,5 @@ main()
 #print(len("04/09/2017 - 05/09/2017"))
 # 23
 # test(results)
-
 
 
