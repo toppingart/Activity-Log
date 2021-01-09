@@ -56,6 +56,8 @@ Used to change the date (as a string) to a datetime object.
 Input: the results (dictionaries in a list)
 Output: None
 
+# ** CHANGE TO USE FOR CURRENT TASK (changing the strings to datetime before adding it into the database in successful_message())
+
 """
 def to_datetime(results):
     for result in results:
@@ -282,12 +284,27 @@ There are two purposes.
 1. Informs the user that the experience/activity record has been successfully added to the database. 
 2. The user is then presented with two buttons: one that exists the program and the other takes them back to the menu screen.
 
-Input: Any number of widgets to be destroyed (these widgets are either from one_day_option() or multiple_days_options() )
+Input: 
+- The user list that contains the details, hour(s), and date(s) (note that all have been checked to be valid already)
+- Any number of widgets to be destroyed (these widgets are either from one_day_option() or multiple_days_options())
 Output: None
 
 """
 
-def successful_message(*widgets):
+def successful_message(user_list, *widgets):
+
+    print(user_list)
+
+    if len(user_list) == 3: # date (2017-07-31T00:00:00.000+00:00), detail, hours
+        vol_record = {"date": '', "details": '', "hours": '' }
+    else: # date ("02/08/2017 - 04/08/2017"), detail, hours, startdate, enddate
+        pass
+
+    vol_record = {"details"}
+   # vol.insert_one(vol_record)
+    # ['a', '1', '25/12/2020']
+    # ['a', '1', '25/12/2020', '01/01/2021']
+    # rental = {"member_renting": ("Saeed", "7806808181"), "movie_rented": movie_ids[1]}
 
     destroy(*widgets)
 
@@ -342,7 +359,7 @@ def all_user_inputs(user_list, *widgets, **days):
 
            # destroy(*widgets)
         print(user_list)
-        successful_message(*widgets)
+        successful_message(user_list, *widgets)
 
     #except NameError:
       #  messagebox.showerror("Dates Error", "Please enter a valid date.")
@@ -397,13 +414,24 @@ def view_log(*widgets, skip_num=0):
    
     try:
         #results = vol.find().skip(skip_num).limit(1)
-        results = vol.find({'hours': 0.5, 'details': 'Interact Club Meeting'}).skip(skip_num).limit(1)
+        results = vol.find({'hours': 0.5, 'details': 'IB Ambassadors Meeting'}).skip(skip_num).limit(1)
         row_num = 0
+        count = vol.count_documents({'hours': 0.5, 'details': 'IB Ambassadors Meeting'})
 
         for result in results:
+
             skip_num +=1
 
-            date = Label(root, text = result['date'] if isinstance(result['date'], str) else result['date'].strftime("%d/%m/%Y"))
+            if isinstance(result['date'], str):
+                date_display = result['date']
+            elif isinstance(result['date'], datetime):
+                date_display = result['date'].strftime("%d/%m/%Y")
+            else:
+                print('LOL')
+                date_display = ''
+
+            date = Label(root, text = date_display)
+            #date = Label(root, text = result['date'] if isinstance(result['date'], str) else result['date'].strftime("%d/%m/%Y"))
             date.grid(row=row_num, column=1, padx=10, pady=10)
             row_num +=1
 
@@ -415,8 +443,9 @@ def view_log(*widgets, skip_num=0):
             hours.grid(row = row_num, column=1, padx=10, pady=10)
             row_num +=1
 
-        # ** HANDLE ERROR ONCE USER REACHES THE END
-        next_button = Button(root, text = "Next", command = lambda: view_log(date, details, hours, next_button, skip_num = skip_num))
+        #print(date)
+        # ** HANDLE ERROR ONCE USER REACHES THE END NameError: free variable 'date' referenced before assignment in enclosing scope
+        next_button = Button(root, text = "Next", command = lambda: view_log(date, details, hours, previous_button, next_button, skip_num = skip_num))
         next_button.grid(row = row_num, column=2, padx=10, pady=10)
 
         # ValueError: skip must be >= 0
@@ -424,13 +453,25 @@ def view_log(*widgets, skip_num=0):
         command = lambda: view_log(date, details, hours, previous_button, next_button, skip_num = skip_num - 2))
         previous_button.grid(row = row_num, column=1, padx=10, pady=10)
 
+        # if the user changes their mind and wants to return to menu
+        menu_button = Button(root, text = "Menu", 
+            command = lambda: menu(date, details, hours, previous_button, next_button, menu_button))
+        menu_button.grid(row = 5, column = 5, padx=10, pady=10)
+
+        if skip_num == count:
+            destroy(next_button)
+        elif skip_num == 1:
+            destroy(previous_button)
+
+    except NameError as f:
+        print(f)
 
     except ValueError: # there are no "previous" posts to display (the user is currently viewing the first post)
-
         # widgets have already been destroyed when the button is clicked (does not need to be added again)
         # the default value of skip_num is 0
         view_log() 
-
+    except Exception as e:
+        print(e)
 
     # {'_id': ObjectId('5fe2adc955957e2ab04be27c'), 'date': datetime.datetime(2017, 8, 24, 0, 0), 'details': 'Principal Breakfast Volunteer', 'hours': 3}
 
@@ -495,5 +536,6 @@ main()
 #print(len("04/09/2017 - 05/09/2017"))
 # 23
 # test(results)
+
 
 
