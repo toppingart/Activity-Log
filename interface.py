@@ -4,6 +4,7 @@ from tkinter import messagebox
 from datetime import datetime
 import sys
 
+# maybe do data visualization stuff with this later? see how much you volunteer over time or on certain periods
 
 print("=======================================================================")
 print("ACTIVITY LOG")
@@ -38,11 +39,31 @@ Input: None
 Output: None
 
 """
-def search_keywords():
-    keyword = '.*stu.*' # wildcard characters in between
+def search_keywords(*widgets):
+    destroy(*widgets)
+
+    search_label = Label(root, text="What would you like to search for?")
+    search_label.grid(row=1, column=1, padx=10, pady=10)
+
+    search_entry = Entry(root)
+    search_entry.grid(row=2, column=1, padx=10, pady=10)
+
+    submit = Button(root, text = "Submit", command = lambda: search_with_input(search_entry.get(), search_label, search_entry, submit))
+    submit.grid(row=3, column=1, padx=10, pady=10)
+
+   # keyword = '.*stu.*' # wildcard characters in between
+    keyword = '*'+ search_entry.get() + '*'
+    #print(keyword)
     #user_keyword = input('What keyword would you like to search? ')
    # results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
     results = vol.find({'hours': 0.5, 'details': 'Interact Club Meeting'})
+    #display_results(results)
+
+def search_with_input(entry, *widgets):
+    # example: results = db.collections.find({'my_key': {'$regex': '.*2019.*'}})
+    keyword = '.*' + entry + '.*'
+    results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
+
     display_results(results)
 
 def alter_date_format():
@@ -282,7 +303,7 @@ def check_date(date):
 """
 There are two purposes.
 1. Informs the user that the experience/activity record has been successfully added to the database. 
-2. The user is then presented with two buttons: one that exists the program and the other takes them back to the menu screen.
+2. The user is then presented with two buttons: one that exits the program and the other takes them back to the menu screen.
 
 Input: 
 - The user list that contains the details, hour(s), and date(s) (note that all have been checked to be valid already)
@@ -296,12 +317,12 @@ def successful_message(user_list, *widgets):
     print(user_list)
 
     if len(user_list) == 3: # date (2017-07-31T00:00:00.000+00:00), detail, hours
-        vol_record = {"date": '', "details": '', "hours": '' }
+        vol_record = {"date": user_list[2], "details": user_list[0], "hours": user_list[1] }
     else: # date ("02/08/2017 - 04/08/2017"), detail, hours, startdate, enddate
         pass
 
-    vol_record = {"details"}
-   # vol.insert_one(vol_record)
+   # vol_record = {"details"}
+    vol.insert_one(vol_record)
     # ['a', '1', '25/12/2020']
     # ['a', '1', '25/12/2020', '01/01/2021']
     # rental = {"member_renting": ("Saeed", "7806808181"), "movie_rented": movie_ids[1]}
@@ -390,6 +411,9 @@ def add_test(user_list):
 def modify_log():
     pass
 
+def create_new_collection():
+    new_collection = db['test']
+
 """
 **NEEDS TO BE CHANGED. CURRENTLY DISPLAYS ONE RECORD (AND OTHER CHANGES...SEE BELOW)
 
@@ -404,14 +428,47 @@ Output: None
 
 """
 
-def view_log(*widgets, skip_num=0):
+def view_which_log(*widgets):
 
     destroy(*widgets)
 
+    choose_years = Label(root, text = "Which year would you like to look at? \n Enter your option by typing in the number")
+    choose_years.grid(row = 1, column =1, padx=10, pady=10)
 
-    # **ADD PREVIOUS BUTTON
-    # ** ADD SEARCH KEYWORDS (maybe in different function?)
+    # show the collections that are available 
+    row_num = 2;
+    col_names = ""
+    for index, collection in enumerate(db.list_collection_names(), start = 1):
+        col_names += str(index) + '\t' + collection
+        col_names += '\n'
+
+    display_cols = Label(root, text = col_names)
+    display_cols.grid(row=row_num, column=2, padx=10, pady=10)
+        
+
+    collection_input = Entry(root)
+    collection_input.grid(row=row_num+1, column=2, padx=10, pady=10)
    
+
+    submit_col = Button(root, text = "Submit", command = lambda: access_collection(collection_input.get(), choose_years, display_cols, collection_input, submit_col))
+    submit_col.grid(row=row_num+2, column=2, padx=10, pady=10)
+
+def access_collection(collection_name, *widgets):
+    destroy(*widgets)
+    global vol
+    vol = db[collection_name]
+    
+
+
+def view_log(results=None, *widgets, skip_num=0):
+
+    destroy(*widgets)
+    search_keywords(*widgets)
+
+
+    # **ADD PREVIOUS BUTTON [DONE]
+    # ** ADD SEARCH KEYWORDS (maybe in different function?)
+    """
     try:
         #results = vol.find().skip(skip_num).limit(1)
         results = vol.find({'hours': 0.5, 'details': 'IB Ambassadors Meeting'}).skip(skip_num).limit(1)
@@ -453,10 +510,18 @@ def view_log(*widgets, skip_num=0):
         command = lambda: view_log(date, details, hours, previous_button, next_button, skip_num = skip_num - 2))
         previous_button.grid(row = row_num, column=1, padx=10, pady=10)
 
+
+        edit_entry_button = Button(root, text = "Edit Entry")
+        edit_entry_button.grid(row=6, column=7, padx=10, pady=10)
+
         # if the user changes their mind and wants to return to menu
         menu_button = Button(root, text = "Menu", 
-            command = lambda: menu(date, details, hours, previous_button, next_button, menu_button))
+            command = lambda: menu(date, details, hours, previous_button, next_button, menu_button, edit_entry_button))
         menu_button.grid(row = 5, column = 5, padx=10, pady=10)
+
+        search_keywords_button = Button(root, text = "Search log", command = lambda: search_keywords(next_button, previous_button, edit_entry_button, search_keywords_button, date, details, hours))
+        search_keywords_button.grid(row=6, column=5, padx=10, pady=10)
+
 
         if skip_num == count:
             destroy(next_button)
@@ -472,15 +537,17 @@ def view_log(*widgets, skip_num=0):
         view_log() 
     except Exception as e:
         print(e)
-
+    
     # {'_id': ObjectId('5fe2adc955957e2ab04be27c'), 'date': datetime.datetime(2017, 8, 24, 0, 0), 'details': 'Principal Breakfast Volunteer', 'hours': 3}
-
+    """
 """
 Displays the menu where there are two buttons for the user to select from:
 1. The user can add a new log record (they have a new experience/activity to add)
 2. The user can view their current log (the records that they have at the moment)
 """
 def menu(*widgets):
+
+    
 
     destroy(*widgets)
     
@@ -512,17 +579,19 @@ def main():
     client = MongoClient('mongodb://localhost:27017') # connects to a specific port
     # open the database
     db = client["sheets"]
+    #print(view_which_log())
 
     # opens the collection that is in the database
     vol = db["volunteer"]
-
-
-    results = vol.find()
-
     menu()
+    results = vol.find()
+    
+    #menu()
     #test_label.pack()
+
     root.mainloop()
 
+# calls main
 main()
        
 #start = datetime(2016, 12, 20)
@@ -536,6 +605,3 @@ main()
 #print(len("04/09/2017 - 05/09/2017"))
 # 23
 # test(results)
-
-
-
