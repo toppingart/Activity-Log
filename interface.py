@@ -48,23 +48,26 @@ def search_keywords(*widgets):
     search_entry = Entry(root)
     search_entry.grid(row=2, column=1, padx=10, pady=10)
 
-    submit = Button(root, text = "Submit", command = lambda: search_with_input(search_entry.get(), search_label, search_entry, submit))
+    submit = Button(root, text = "Submit", command = lambda: search_with_input(search_entry.get(), search_label, search_entry, submit, view_all))
     submit.grid(row=3, column=1, padx=10, pady=10)
 
+    view_all = Button(root, text = "View all instead", command = lambda: view_log(None, search_label, search_entry, submit, view_all))
+    view_all.grid(row=3, column=2, padx=10, pady=10)
    # keyword = '.*stu.*' # wildcard characters in between
-    keyword = '*'+ search_entry.get() + '*'
+   # keyword = '*'+ search_entry.get() + '*'
     #print(keyword)
     #user_keyword = input('What keyword would you like to search? ')
    # results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
-    results = vol.find({'hours': 0.5, 'details': 'Interact Club Meeting'})
+   # results = vol.find({'hours': 0.5, 'details': 'Interact Club Meeting'})
     #display_results(results)
 
 def search_with_input(entry, *widgets):
+    destroy(*widgets)
     # example: results = db.collections.find({'my_key': {'$regex': '.*2019.*'}})
     keyword = '.*' + entry + '.*'
     results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
-
-    display_results(results)
+    view_log(keyword, *widgets)
+   # display_results(results)
 
 def alter_date_format():
     pass
@@ -460,73 +463,91 @@ def access_collection(collection_name, *widgets):
     
 
 
-def view_log(results=None, *widgets, skip_num=0):
+def view_log(keyword=None, *widgets, skip_num=0):
+
+    # otherwise !label
+
+    if keyword == None:
+        pass
+    elif not isinstance(keyword,str):
+        search_keywords(*widgets)
 
     destroy(*widgets)
-    search_keywords(*widgets)
+    
 
 
     # **ADD PREVIOUS BUTTON [DONE]
     # ** ADD SEARCH KEYWORDS (maybe in different function?)
-    """
+    
     try:
         #results = vol.find().skip(skip_num).limit(1)
-        results = vol.find({'hours': 0.5, 'details': 'IB Ambassadors Meeting'}).skip(skip_num).limit(1)
-        row_num = 0
-        count = vol.count_documents({'hours': 0.5, 'details': 'IB Ambassadors Meeting'})
 
-        for result in results:
+        if isinstance(keyword, str) or keyword == None:
 
-            skip_num +=1
+            if isinstance(keyword, str):
+                results = vol.find({'details': {'$regex': keyword, '$options': 'i'}}).skip(skip_num).limit(1)
+                count = vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}})
 
-            if isinstance(result['date'], str):
-                date_display = result['date']
-            elif isinstance(result['date'], datetime):
-                date_display = result['date'].strftime("%d/%m/%Y")
-            else:
-                print('LOL')
-                date_display = ''
+            elif keyword == None:
+                results = vol.find().skip(skip_num).limit(1)
+                count = vol.count_documents
 
-            date = Label(root, text = date_display)
-            #date = Label(root, text = result['date'] if isinstance(result['date'], str) else result['date'].strftime("%d/%m/%Y"))
-            date.grid(row=row_num, column=1, padx=10, pady=10)
-            row_num +=1
+            row_num = 0
 
-            details = Label(root, text = "Details: " + result['details'])
-            details.grid(row = row_num, column =1, padx=10, pady=10)
-            row_num +=1
-
-            hours = Label(root, text = "Hours: " + str(result['hours']))
-            hours.grid(row = row_num, column=1, padx=10, pady=10)
-            row_num +=1
-
-        #print(date)
-        # ** HANDLE ERROR ONCE USER REACHES THE END NameError: free variable 'date' referenced before assignment in enclosing scope
-        next_button = Button(root, text = "Next", command = lambda: view_log(date, details, hours, previous_button, next_button, skip_num = skip_num))
-        next_button.grid(row = row_num, column=2, padx=10, pady=10)
-
-        # ValueError: skip must be >= 0
-        previous_button = Button(root, text = "Previous", 
-        command = lambda: view_log(date, details, hours, previous_button, next_button, skip_num = skip_num - 2))
-        previous_button.grid(row = row_num, column=1, padx=10, pady=10)
+            for result in results:
+               # print(result)
 
 
-        edit_entry_button = Button(root, text = "Edit Entry")
-        edit_entry_button.grid(row=6, column=7, padx=10, pady=10)
+                skip_num +=1
 
-        # if the user changes their mind and wants to return to menu
-        menu_button = Button(root, text = "Menu", 
-            command = lambda: menu(date, details, hours, previous_button, next_button, menu_button, edit_entry_button))
-        menu_button.grid(row = 5, column = 5, padx=10, pady=10)
+                if isinstance(result['date'], str):
+                    date_display = result['date']
+                elif isinstance(result['date'], datetime):
+                    date_display = result['date'].strftime("%d/%m/%Y")
+                else:
+                    print('LOL')
+                    date_display = ''
 
-        search_keywords_button = Button(root, text = "Search log", command = lambda: search_keywords(next_button, previous_button, edit_entry_button, search_keywords_button, date, details, hours))
-        search_keywords_button.grid(row=6, column=5, padx=10, pady=10)
+                date = Label(root, text = date_display)
+                #date = Label(root, text = result['date'] if isinstance(result['date'], str) else result['date'].strftime("%d/%m/%Y"))
+                date.grid(row=row_num, column=1, padx=10, pady=10)
+                row_num +=1
+
+                details = Label(root, text = "Details: " + result['details'])
+                details.grid(row = row_num, column =1, padx=10, pady=10)
+                row_num +=1
+
+                hours = Label(root, text = "Hours: " + str(result['hours']))
+                hours.grid(row = row_num, column=1, padx=10, pady=10)
+                row_num +=1
+
+            #print(date)
+            # ** HANDLE ERROR ONCE USER REACHES THE END NameError: free variable 'date' referenced before assignment in enclosing scope
+            next_button = Button(root, text = "Next", command = lambda: view_log(keyword, date, details, hours, previous_button, next_button, skip_num = skip_num))
+            next_button.grid(row = row_num, column=2, padx=10, pady=10)
+
+            # ValueError: skip must be >= 0
+            previous_button = Button(root, text = "Previous", 
+            command = lambda: view_log(keyword, date, details, hours, previous_button, next_button, skip_num = skip_num - 2))
+            previous_button.grid(row = row_num, column=1, padx=10, pady=10)
 
 
-        if skip_num == count:
-            destroy(next_button)
-        elif skip_num == 1:
-            destroy(previous_button)
+            edit_entry_button = Button(root, text = "Edit Entry")
+            edit_entry_button.grid(row=6, column=7, padx=10, pady=10)
+
+            # if the user changes their mind and wants to return to menu
+            menu_button = Button(root, text = "Menu", 
+                command = lambda: menu(date, details, hours, previous_button, next_button, menu_button, edit_entry_button))
+            menu_button.grid(row = 5, column = 5, padx=10, pady=10)
+
+            search_keywords_button = Button(root, text = "Search log", command = lambda: search_keywords(next_button, previous_button, edit_entry_button, search_keywords_button, date, details, hours))
+            search_keywords_button.grid(row=6, column=5, padx=10, pady=10)
+
+
+            if skip_num == count:
+                destroy(next_button)
+            elif skip_num == 1:
+                destroy(previous_button)
 
     except NameError as f:
         print(f)
@@ -535,19 +556,17 @@ def view_log(results=None, *widgets, skip_num=0):
         # widgets have already been destroyed when the button is clicked (does not need to be added again)
         # the default value of skip_num is 0
         view_log() 
-    except Exception as e:
-        print(e)
+    #  except Exception as e:
+    #     print(e)
     
-    # {'_id': ObjectId('5fe2adc955957e2ab04be27c'), 'date': datetime.datetime(2017, 8, 24, 0, 0), 'details': 'Principal Breakfast Volunteer', 'hours': 3}
-    """
+# {'_id': ObjectId('5fe2adc955957e2ab04be27c'), 'date': datetime.datetime(2017, 8, 24, 0, 0), 'details': 'Principal Breakfast Volunteer', 'hours': 3}
+    
 """
 Displays the menu where there are two buttons for the user to select from:
 1. The user can add a new log record (they have a new experience/activity to add)
 2. The user can view their current log (the records that they have at the moment)
 """
 def menu(*widgets):
-
-    
 
     destroy(*widgets)
     
