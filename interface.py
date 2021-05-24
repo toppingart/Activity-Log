@@ -441,25 +441,47 @@ def view_which_log(*widgets):
     # show the collections that are available 
     row_num = 2;
     col_names = ""
+
+    """
     for index, collection in enumerate(db.list_collection_names(), start = 1):
         col_names += str(index) + '\t' + collection
         col_names += '\n'
+    """
 
-    display_cols = Label(root, text = col_names)
-    display_cols.grid(row=row_num, column=2, padx=10, pady=10)
+    """
+        buttons = []
+    win = Tkinter.Tk()
+    for i in range(5):
+        b = Tkinter.Button(win, height=10, width=100, command=lambda i=i: onClick(i))
+        b.pack()
+        buttons.append(b)
+    """
+
+    year_buttons = []
+    button_num = 0
+    for collection in db.list_collection_names():
+        b = Button(root, text = collection, command = lambda: access_collection(year_buttons, collection))
+        b.grid(row=5, column=button_num, padx=10, pady=10)
+        year_buttons.append(b)
+        button_num +=1
+
+
+
+    #display_cols = Label(root, text = col_names)
+    #display_cols.grid(row=row_num, column=2, padx=10, pady=10)
         
 
-    collection_input = Entry(root)
-    collection_input.grid(row=row_num+1, column=2, padx=10, pady=10)
+    #collection_input = Entry(root)
+    #collection_input.grid(row=row_num+1, column=2, padx=10, pady=10)
    
 
-    submit_col = Button(root, text = "Submit", command = lambda: access_collection(collection_input.get(), choose_years, display_cols, collection_input, submit_col))
-    submit_col.grid(row=row_num+2, column=2, padx=10, pady=10)
+    #submit_col = Button(root, text = "Submit", command = lambda: access_collection(collection_input.get(), choose_years, collection_input, submit_col))
+    #submit_col.grid(row=row_num+2, column=2, padx=10, pady=10)
 
-def access_collection(collection_name, *widgets):
+def access_collection(button_list, collection_name = None, *widgets):
+
     destroy(*widgets)
-    global vol
-    vol = db[collection_name]
+    print(collection_name)
     
 
 
@@ -598,12 +620,12 @@ def main():
     client = MongoClient('mongodb://localhost:27017') # connects to a specific port
     # open the database
     db = client["sheets"]
-    #print(view_which_log())
+    view_which_log()
 
     # opens the collection that is in the database
     vol = db["volunteer"]
-    menu()
-    results = vol.find()
+   # menu()
+   # results = vol.find()
     
     #menu()
     #test_label.pack()
