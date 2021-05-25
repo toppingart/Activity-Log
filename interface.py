@@ -4,6 +4,7 @@ from tkinter import messagebox
 from datetime import datetime
 import sys
 
+
 # maybe do data visualization stuff with this later? see how much you volunteer over time or on certain periods
 
 print("=======================================================================")
@@ -39,7 +40,7 @@ Input: None
 Output: None
 
 """
-def search_keywords(*widgets):
+def search_keywords(vol, *widgets):
     destroy(*widgets)
 
     search_label = Label(root, text="What would you like to search for?")
@@ -48,10 +49,10 @@ def search_keywords(*widgets):
     search_entry = Entry(root)
     search_entry.grid(row=2, column=1, padx=10, pady=10)
 
-    submit = Button(root, text = "Submit", command = lambda: search_with_input(search_entry.get(), search_label, search_entry, submit, view_all))
+    submit = Button(root, text = "Submit", command = lambda: search_with_input(vol, search_entry.get(), search_label, search_entry, submit, view_all))
     submit.grid(row=3, column=1, padx=10, pady=10)
 
-    view_all = Button(root, text = "View all instead", command = lambda: view_log(None, search_label, search_entry, submit, view_all))
+    view_all = Button(root, text = "View all instead", command = lambda: view_log(vol, None, search_label, search_entry, submit, view_all))
     view_all.grid(row=3, column=2, padx=10, pady=10)
    # keyword = '.*stu.*' # wildcard characters in between
    # keyword = '*'+ search_entry.get() + '*'
@@ -61,12 +62,15 @@ def search_keywords(*widgets):
    # results = vol.find({'hours': 0.5, 'details': 'Interact Club Meeting'})
     #display_results(results)
 
-def search_with_input(entry, *widgets):
+def search_with_input(vol, entry, *widgets):
     destroy(*widgets)
+
     # example: results = db.collections.find({'my_key': {'$regex': '.*2019.*'}})
     keyword = '.*' + entry + '.*'
+   
+    #results = vol.find({'hours': 0.5})
     results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
-    view_log(keyword, *widgets)
+    view_log(vol, keyword, *widgets)
    # display_results(results)
 
 def alter_date_format():
@@ -460,7 +464,9 @@ def view_which_log(*widgets):
     year_buttons = []
     button_num = 0
     for collection in db.list_collection_names():
-        b = Button(root, text = collection, command = lambda: access_collection(year_buttons, collection))
+        # command= lambda s=somevariable: printout(s)) 
+        # https://stackoverflow.com/questions/49082862/create-multiple-tkinter-button-with-different-command-but-external-variable
+        b = Button(root, text = collection, command = lambda collection_name = collection: access_collection(year_buttons, collection_name, choose_years))
         b.grid(row=5, column=button_num, padx=10, pady=10)
         year_buttons.append(b)
         button_num +=1
@@ -478,23 +484,28 @@ def view_which_log(*widgets):
     #submit_col = Button(root, text = "Submit", command = lambda: access_collection(collection_input.get(), choose_years, collection_input, submit_col))
     #submit_col.grid(row=row_num+2, column=2, padx=10, pady=10)
 
-def access_collection(button_list, collection_name = None, *widgets):
+def access_collection(button_list, collection_name, *widgets):
+
+    for button in button_list:
+        destroy(button)
 
     destroy(*widgets)
-    print(collection_name)
+    menu(collection_name)
     
 
 
-def view_log(keyword=None, *widgets, skip_num=0):
+def view_log(vol, keyword=None, *widgets, skip_num=0):
 
     # otherwise !label
+    
+    destroy(*widgets)
 
     if keyword == None:
         pass
     elif not isinstance(keyword,str):
-        search_keywords(*widgets)
+        search_keywords(vol, *widgets)
 
-    destroy(*widgets)
+    
     
 
 
@@ -512,7 +523,7 @@ def view_log(keyword=None, *widgets, skip_num=0):
 
             elif keyword == None:
                 results = vol.find().skip(skip_num).limit(1)
-                count = vol.count_documents
+                count = vol.count_documents()
 
             row_num = 0
 
@@ -545,12 +556,12 @@ def view_log(keyword=None, *widgets, skip_num=0):
 
             #print(date)
             # ** HANDLE ERROR ONCE USER REACHES THE END NameError: free variable 'date' referenced before assignment in enclosing scope
-            next_button = Button(root, text = "Next", command = lambda: view_log(keyword, date, details, hours, previous_button, next_button, skip_num = skip_num))
+            next_button = Button(root, text = "Next", command = lambda: view_log(vol, keyword, date, details, hours, previous_button, next_button, skip_num = skip_num))
             next_button.grid(row = row_num, column=2, padx=10, pady=10)
 
             # ValueError: skip must be >= 0
             previous_button = Button(root, text = "Previous", 
-            command = lambda: view_log(keyword, date, details, hours, previous_button, next_button, skip_num = skip_num - 2))
+            command = lambda: view_log(vol, keyword, date, details, hours, previous_button, next_button, skip_num = skip_num - 2))
             previous_button.grid(row = row_num, column=1, padx=10, pady=10)
 
 
@@ -562,8 +573,13 @@ def view_log(keyword=None, *widgets, skip_num=0):
                 command = lambda: menu(date, details, hours, previous_button, next_button, menu_button, edit_entry_button))
             menu_button.grid(row = 5, column = 5, padx=10, pady=10)
 
-            search_keywords_button = Button(root, text = "Search log", command = lambda: search_keywords(next_button, previous_button, edit_entry_button, search_keywords_button, date, details, hours))
+            search_keywords_button = Button(root, text = "Search log", command = lambda: search_keywords(vol, next_button, previous_button, edit_entry_button, search_keywords_button, date, details, hours))
             search_keywords_button.grid(row=6, column=5, padx=10, pady=10)
+
+            if count == 0:
+                no_logs = Label(root, text="No search results have appeared. Try something else.") # maybe change to function
+                destroy(previous_button, menu_button, edit_entry_button, search_keywords_button)
+                no_logs.grid(row=1, column=1, padx=10, pady=10)
 
 
             if skip_num == count:
@@ -588,9 +604,11 @@ Displays the menu where there are two buttons for the user to select from:
 1. The user can add a new log record (they have a new experience/activity to add)
 2. The user can view their current log (the records that they have at the moment)
 """
-def menu(*widgets):
+def menu(collection, *widgets):
 
     destroy(*widgets)
+
+    vol = db[collection]
     
     global menu_label, add_record_1, view_2
     menu_label = Label(root, text="MENU")
@@ -602,15 +620,16 @@ def menu(*widgets):
     #search_keywords()
 
     view_2 = Button(root, text = "View activity log", padx = 50, pady=10, 
-        command = lambda: view_log(menu_label, add_record_1, view_2))
+        command = lambda: view_log(vol, menu_label, add_record_1, view_2))
     view_2.grid(row=3, column=1)
+
 
 
 
 def main():
 
-
     global root, test_label, client, db, vol
+    
 
     root = Tk()
     root.title("Activity Log")
@@ -620,10 +639,13 @@ def main():
     client = MongoClient('mongodb://localhost:27017') # connects to a specific port
     # open the database
     db = client["sheets"]
+    
+   # while view_which_log() != None:
     view_which_log()
+   #     print(a)
 
     # opens the collection that is in the database
-    vol = db["volunteer"]
+    #vol = db["volunteer"]
    # menu()
    # results = vol.find()
     
