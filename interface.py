@@ -499,6 +499,7 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
     # otherwise !label
     
     destroy(*widgets)
+    destroy(menu_label)
 
     if keyword == None:
         pass
@@ -523,7 +524,7 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
 
             elif keyword == None:
                 results = vol.find().skip(skip_num).limit(1)
-                count = vol.count_documents()
+                count = vol.estimated_document_count()
 
             row_num = 0
 
@@ -577,9 +578,12 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
             search_keywords_button.grid(row=6, column=5, padx=10, pady=10)
 
             if count == 0:
-                no_logs = Label(root, text="No search results have appeared. Try something else.") # maybe change to function
+                no_logs = Label(root, text="No search results have appeared. Try something else.") 
                 destroy(previous_button, menu_button, edit_entry_button, search_keywords_button)
                 no_logs.grid(row=1, column=1, padx=10, pady=10)
+
+                search_again = Button(root, text="Search again")
+                search_again.grid(row=2, column=1, padx=10,pady=10)
 
 
             if skip_num == count:
