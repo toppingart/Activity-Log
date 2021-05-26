@@ -418,8 +418,33 @@ def add_test(user_list):
 def modify_log():
     pass
 
-def create_new_collection():
-    new_collection = db['test']
+def create_new_collection(year_buttons, *widgets): #DOO
+
+    for button in year_buttons:
+        destroy(button)
+
+    destroy(*widgets)
+    new_year = Label(root, text = "What would you like the new year to be called?")
+    new_year.grid(row=1, column=1, padx=10, pady=10)
+
+    new_year_entry = Entry(root)
+    new_year_entry.grid(row=2, column=1, padx=10, pady=10)
+
+    submit = Button(root, text = "Submit", command = lambda: new_collection(new_year_entry.get(), new_year, new_year_entry, submit))
+    submit.grid(row=3, column=1, padx=10, pady=10)
+
+  
+
+def new_collection(new_name, *widgets):
+    destroy(*widgets)
+    success_message = Label(root, text="A new collection has been added!")
+    success_message.grid(row=1, column=1, padx=10, pady=10)
+
+
+
+    ok_button = Button(root, text = "ok", command = lambda: view_which_log(success_message, ok_button))
+    ok_button.grid(row=2, column=1, padx=10, pady=10)
+
 
 """
 **NEEDS TO BE CHANGED. CURRENTLY DISPLAYS ONE RECORD (AND OTHER CHANGES...SEE BELOW)
@@ -466,7 +491,7 @@ def view_which_log(*widgets):
     for collection in db.list_collection_names():
         # command= lambda s=somevariable: printout(s)) 
         # https://stackoverflow.com/questions/49082862/create-multiple-tkinter-button-with-different-command-but-external-variable
-        b = Button(root, text = collection, command = lambda collection_name = collection: access_collection(year_buttons, collection_name, choose_years))
+        b = Button(root, text = collection, command = lambda collection_name = collection: access_collection(year_buttons, collection_name, choose_years, new_year))
         b.grid(row=5, column=button_num, padx=10, pady=10)
         year_buttons.append(b)
         button_num +=1
@@ -481,8 +506,8 @@ def view_which_log(*widgets):
     #collection_input.grid(row=row_num+1, column=2, padx=10, pady=10)
    
 
-    #submit_col = Button(root, text = "Submit", command = lambda: access_collection(collection_input.get(), choose_years, collection_input, submit_col))
-    #submit_col.grid(row=row_num+2, column=2, padx=10, pady=10)
+    new_year = Button(root, text = "Add new year instead", command = lambda: create_new_collection(year_buttons, choose_years, new_year))
+    new_year.grid(row=row_num+2, column=2, padx=10, pady=10)
 
 def access_collection(button_list, collection_name, *widgets):
 
@@ -638,6 +663,9 @@ def main():
     root = Tk()
     root.title("Activity Log")
     root.geometry("700x400")
+
+   # root.columnconfigure(0,weight=1)    #confiugures column 0 to stretch with a scaler of 1.
+   # root.rowconfigure(0,weight=1)
 
  
     client = MongoClient('mongodb://localhost:27017') # connects to a specific port
