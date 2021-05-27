@@ -1,17 +1,9 @@
 from pymongo import MongoClient
 from tkinter import *
-from tkinter import messagebox
 from datetime import datetime
 import sys
 
-
 # maybe do data visualization stuff with this later? see how much you volunteer over time or on certain periods
-
-print("=======================================================================")
-print("ACTIVITY LOG")
-print("=======================================================================")
-
-print("MENU:")
 
 
 """
