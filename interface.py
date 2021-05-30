@@ -104,19 +104,20 @@ Output: None
 Note: The user exits this function when the SUBMIT button is pressed (the user is then sent to add_hours())
 """
 
-def add_details():
+def add_details(*widgets):
 
-    menu_label.destroy()
-    add_record_1.destroy()
-    view_2.destroy()
+    for widget in widgets:
+        destroy(widget)
 
+    frame1 = LabelFrame(root, padx=10, pady=10)
+    frame1.grid(row=0, column=0)
 
-    details_text = Label(root, text="Give some details about the experience.")
+    details_text = Label(frame1, text="Give some details about the experience.")
     details_text.grid(row=0,column=1,padx=50,pady=10)   
-    details_entry = Entry(root)
-    details_entry.grid(row=1, column=1,ipadx=70, ipady = 70,padx=50,pady=50)
+    details_entry = Text(frame1, width=30, height=10)
+    details_entry.grid(row=1, column=1)
 
-    submit_button = Button(root, text = "Submit", command = lambda: add_hours(details_entry.get(), details_text, details_entry, submit_button))
+    submit_button = Button(frame1, text = "Submit", command = lambda: add_hours(details_entry.get('1.0', 'end'), details_text, details_entry, submit_button))
     submit_button.grid(row=2, column=1, padx=50,pady=50)
 
     #add_hours(details_text, submit_button)
@@ -456,36 +457,28 @@ def view_which_log(*widgets):
 
     destroy(*widgets)
 
-    choose_years = Label(root, text = "Which year would you like to look at? \n Enter your option by typing in the number")
+    frame1 = LabelFrame(root, padx=5, pady=5)
+    frame1.grid(row=0, padx=10, pady=10)
+
+    frame2 = LabelFrame(root, padx=5, pady=5)
+    frame2.grid(row=1, padx=10, pady=10)
+
+    choose_years = Label(frame1, text = "Which year would you like to look at? \n Enter your option by typing in the number")
     choose_years.grid(row = 1, column =1, padx=10, pady=10)
 
     # show the collections that are available 
     row_num = 2;
     col_names = ""
 
-    """
-    for index, collection in enumerate(db.list_collection_names(), start = 1):
-        col_names += str(index) + '\t' + collection
-        col_names += '\n'
-    """
-
-    """
-        buttons = []
-    win = Tkinter.Tk()
-    for i in range(5):
-        b = Tkinter.Button(win, height=10, width=100, command=lambda i=i: onClick(i))
-        b.pack()
-        buttons.append(b)
-    """
-
     year_buttons = []
     button_num = 0
     for collection in db.list_collection_names():
         # command= lambda s=somevariable: printout(s)) 
         # https://stackoverflow.com/questions/49082862/create-multiple-tkinter-button-with-different-command-but-external-variable
-        b = Button(root, text = collection, command = lambda collection_name = collection: access_collection(year_buttons, collection_name, choose_years, new_year))
-        b.grid(row=5, column=button_num, padx=10, pady=10)
+        b = Button(frame2, text = collection, command = lambda collection_name = collection: access_collection(year_buttons, collection_name, choose_years, new_year, frame1, frame2))
+        b.grid(row=2, column=button_num, padx=10, pady=10)
         year_buttons.append(b)
+        Grid.columnconfigure(root, index=button_num, weight=1)
         button_num +=1
 
 
@@ -498,8 +491,12 @@ def view_which_log(*widgets):
     #collection_input.grid(row=row_num+1, column=2, padx=10, pady=10)
    
 
-    new_year = Button(root, text = "Add new year instead", command = lambda: create_new_collection(year_buttons, choose_years, new_year))
-    new_year.grid(row=row_num+2, column=2, padx=10, pady=10)
+    new_year = Button(frame2, text = "Add new year instead", command = lambda: create_new_collection(year_buttons, choose_years, new_year, frame1, frame2))
+    new_year.grid(row=2, column=button_num, padx=10, pady=10)
+
+    Grid.rowconfigure(root, index=0, weight=1)
+    Grid.rowconfigure(root, index=1, weight=1)
+    Grid.rowconfigure(root, index=2, weight=1)
 
 def access_collection(button_list, collection_name, *widgets):
 
@@ -630,22 +627,28 @@ def menu(collection, *widgets):
     destroy(*widgets)
 
     vol = db[collection]
+
+    frame1 = LabelFrame(root, padx=100, pady=100)
+    frame1.grid(row=0, column=0)
     
     global menu_label, add_record_1, view_2
-    menu_label = Label(root, text="MENU")
-    menu_label.grid(row=0,column=1,padx=50,pady=10)    
+    menu_label = Label(frame1, text="MENU")
+    menu_label.grid(row=0,column=0,padx=50,pady=10)    
 
-    add_record_1 = Button(root, text = "Add a new log record", padx = 50, pady=10, command=lambda: add_details())
-    add_record_1.grid(row=2, column=1)
+    add_record_1 = Button(frame1, text = "Add a new log record", padx = 50, pady=10, command=lambda: add_details(menu_label, add_record_1, view_2, frame1))
+
+
+    add_record_1.grid(row=1, column=0)
 
     #search_keywords()
 
-    view_2 = Button(root, text = "View activity log", padx = 50, pady=10, 
-        command = lambda: view_log(vol, menu_label, add_record_1, view_2))
-    view_2.grid(row=3, column=1)
+    view_2 = Button(frame1, text = "View activity log", padx = 50, pady=10, 
+        command = lambda: view_log(vol, menu_label, add_record_1, view_2, frame1))
+    view_2.grid(row=2, column=0)
 
 
-
+    Grid.rowconfigure(root, 0, weight=1)
+    Grid.columnconfigure(root, 0, weight=1)
 
 def main():
 
