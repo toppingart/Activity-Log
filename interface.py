@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from tkinter import *
+from tkinter import messagebox
 from datetime import datetime
 import sys
 
@@ -35,17 +36,21 @@ Output: None
 def search_keywords(vol, *widgets):
     destroy(*widgets)
 
-    search_label = Label(root, text="What would you like to search for?")
-    search_label.grid(row=1, column=1, padx=10, pady=10)
+    frame1 = create_frame()
 
-    search_entry = Entry(root)
-    search_entry.grid(row=2, column=1, padx=10, pady=10)
+    search_label = Label(frame1, text="What would you like to search for?")
+    search_label.grid(row=0, column=1, padx=10, pady=10)
 
-    submit = Button(root, text = "Submit", command = lambda: search_with_input(vol, search_entry.get(), search_label, search_entry, submit, view_all))
-    submit.grid(row=3, column=1, padx=10, pady=10)
+    search_entry = Entry(frame1)
+    search_entry.grid(row=1, column=1, padx=10, pady=10)
 
-    view_all = Button(root, text = "View all instead", command = lambda: view_log(vol, None, search_label, search_entry, submit, view_all))
-    view_all.grid(row=3, column=2, padx=10, pady=10)
+    submit = Button(frame1, text = "Submit", command = lambda: search_with_input(vol, search_entry.get(), search_label, search_entry, submit, view_all, frame1))
+    submit.grid(row=2, column=1, padx=10, pady=10)
+
+    view_all = Button(frame1, text = "View all instead", command = lambda: view_log(vol, None, search_label, search_entry, submit, view_all, frame1))
+    view_all.grid(row=3, column=1, padx=10, pady=10)
+
+    configure(3,1)
    # keyword = '.*stu.*' # wildcard characters in between
    # keyword = '*'+ search_entry.get() + '*'
     #print(keyword)
@@ -117,7 +122,7 @@ def add_details(*widgets):
     details_entry = Text(frame1, width=30, height=10)
     details_entry.grid(row=1, column=1)
 
-    submit_button = Button(frame1, text = "Submit", command = lambda: add_hours(details_entry.get('1.0', 'end'), details_text, details_entry, submit_button))
+    submit_button = Button(frame1, text = "Submit", command = lambda: add_hours(details_entry.get('1.0', 'end'), details_text, details_entry, submit_button, frame1))
     submit_button.grid(row=2, column=1, padx=50,pady=50)
 
     #add_hours(details_text, submit_button)
@@ -156,15 +161,24 @@ def add_hours(details, *widgets):
     user_input_list = [details] # obtained from add_details()
     destroy(*widgets)
 
-    hours_text = Label(root, text = "How many hours did this take?")
+    frame1 = LabelFrame(root)
+    frame1.grid(row=0, column=1, padx=10, pady=10)
+
+    hours_text = Label(frame1, text = "How many hours did this take?")
     hours_text.grid(row=0,column=1,padx=50,pady=10)
 
-    hours_entry = Entry(root)
-    hours_entry.grid(row=1, column=1,ipadx=10, ipady = 10,padx=50,pady=50)
+    hours_entry = Entry(frame1)
+    hours_entry.grid(row=1, column=1,padx=50,pady=50)
 
-    submit_button = Button(root, text = "Submit", 
-        command = lambda: add_dates(user_input_list, hours_entry.get(), hours_text, hours_entry, submit_button))
+    submit_button = Button(frame1, text = "Submit", 
+        command = lambda: add_dates(user_input_list, hours_entry.get(), hours_text, hours_entry, submit_button, frame1))
     submit_button.grid(row=2, column=1, padx=50,pady=50)
+
+    Grid.columnconfigure(root, index=1, weight=1)
+
+    Grid.rowconfigure(root, index=0, weight=1)
+    Grid.rowconfigure(root, index=1, weight=1)
+    Grid.rowconfigure(root, index=2, weight=1)
 
 
 """
@@ -194,21 +208,43 @@ def add_dates(user_list, hours,*widgets):
 
     destroy(*widgets)
     user_list.append(hours) # if hours is an int (is valid), it is added to the list of user inputs
+
+    frame1 = create_frame()
   
-    dates_text = Label(root, text = "Did this take place over the span of one day or multiple days?")
+    dates_text = Label(frame1, text = "Did this take place over the span of one day or multiple days?")
     dates_text.grid(row=0,column=1,padx=50,pady=10)
 
     # first option the user can select 
-    one_day_button = Button(root, text = "One day", 
-        command = lambda: one_day_option(user_list, dates_text, one_day_button, m_days_button))
+    one_day_button = Button(frame1, text = "One day", 
+        command = lambda: one_day_option(user_list, dates_text, one_day_button, m_days_button, frame1))
 
-    one_day_button.grid(row=2, column=1, padx=50,pady=50)
+    one_day_button.grid(row=1, column=1, padx=50,pady=50)
 
     # second option the user can select 
-    m_days_button = Button(root, text = "Multiple days", 
-        command = lambda: multiple_days_option(user_list, dates_text, one_day_button, m_days_button))
+    m_days_button = Button(frame1, text = "Multiple days", 
+        command = lambda: multiple_days_option(user_list, dates_text, one_day_button, m_days_button, frame1))
 
-    m_days_button.grid(row=3, column=1, padx=50, pady=50)
+    m_days_button.grid(row=2, column=1, padx=50, pady=50)
+
+    configure(2, 1)
+
+
+def configure(row, column):
+
+    if row != None:
+        for row_num in range(0, row+1):
+            Grid.rowconfigure(root, index=row_num, weight=1)
+
+    if column != None:
+        for col_num in range(0,column+1):
+            Grid.columnconfigure(root, index=col_num, weight=1)
+
+
+def create_frame():
+    frame1 = LabelFrame(root, padx=10, pady=10)
+    frame1.grid(row=0, column=1)
+    return frame1
+
 
 
 
@@ -229,15 +265,19 @@ def one_day_option(user_list, *widgets):
 
     destroy(*widgets)
 
-    day_text = Label(root, text = "What day did this take place (eg. 25/12/2020) ")
+    frame1 = create_frame()
+
+    day_text = Label(frame1, text = "What day did this take place (eg. 25/12/2020) ")
     day_text.grid(row=0,column=1,padx=50,pady=10)
 
-    day_entry = Entry(root) # textbox
+    day_entry = Entry(frame1) # textbox
     day_entry.grid(row=1,column=1,padx=50,pady=10)
 
-    submit_button = Button(root, text = "Submit", 
-        command = lambda: all_user_inputs(user_list, day_text, day_entry, submit_button, date = day_entry.get()))
+    submit_button = Button(frame1, text = "Submit", 
+        command = lambda: all_user_inputs(user_list, day_text, day_entry, submit_button, frame1, date = day_entry.get()))
     submit_button.grid(row=2, column=1, padx=50,pady=50)
+
+    configure(2, 1)
 
 
 """
@@ -258,29 +298,33 @@ def multiple_days_option(user_list, *widgets):
 
     destroy(*widgets)
 
-    days_text = Label(root, text = "What days did this take place (eg. 25/12/2020 - 01/01/2021)" )
+    frame1 = create_frame()
+
+    days_text = Label(frame1, text = "What days did this take place (eg. 25/12/2020 - 01/01/2021)" )
     days_text.grid(row=0,column=1,padx=50,pady=10)
 
-    start_day_text = Label(root, text = "Start date:")
+    start_day_text = Label(frame1, text = "Start date:")
     start_day_text.grid(row=1,column=1, padx=50, pady=10)
 
-    start_day_entry = Entry(root)
+    start_day_entry = Entry(frame1)
     start_day_entry.grid(row=2,column=1,padx=50,pady=10)
 
-    end_day_text = Label(root, text = "End date:")
+    end_day_text = Label(frame1, text = "End date:")
     end_day_text.grid(row=3, column=1, padx=50, pady=10)
 
-    end_day_entry = Entry(root)
+    end_day_entry = Entry(frame1)
     end_day_entry.grid(row=4, column=1, padx=50, pady=10)
 
 
-    submit_button = Button(root, text = "Submit", 
+    submit_button = Button(frame1, text = "Submit", 
         command = lambda: all_user_inputs(user_list, days_text, start_day_text, end_day_text, 
-            start_day_entry, end_day_entry, submit_button, 
+            start_day_entry, end_day_entry, submit_button, frame1,
             startdate = start_day_entry.get(), enddate = end_day_entry.get()))
 
 
     submit_button.grid(row=5, column=1, padx=50,pady=50)
+
+    configure(5,1)
 
 """
 Checks if the date entered by the user is a valid date (valid day, month, and year).
@@ -314,7 +358,7 @@ Output: None
 
 def successful_message(user_list, *widgets):
 
-    print(user_list)
+  
 
     if len(user_list) == 3: # date (2017-07-31T00:00:00.000+00:00), detail, hours
         vol_record = {"date": user_list[2], "details": user_list[0], "hours": user_list[1] }
@@ -329,17 +373,22 @@ def successful_message(user_list, *widgets):
 
     destroy(*widgets)
 
-    success_message = Label(root, text = "The record has been successfully added to the database!")
-    success_message.grid(row=1, column=1)
+    frame1 = create_frame()
+
+
+    success_message = Label(frame1, text = "The record has been successfully added to the database!")
+    success_message.grid(row=0, column=1)
 
     # exit option
-    exit_button= Button(root, text = "Exit", command = lambda: sys.exit()) # if pressed, exits the program
-    exit_button.grid(row=2, column = 1)
+    exit_button= Button(frame1, text = "Exit", command = lambda: sys.exit()) # if pressed, exits the program
+    exit_button.grid(row=1, column = 1)
 
     # go back to menu option
     back_to_menu_button = Button(root, text = "Back to menu", 
         command = lambda: menu(success_message, exit_button, back_to_menu_button))
-    back_to_menu_button.grid(row=3, column=1)
+    back_to_menu_button.grid(row=2, column=1)
+
+    configure(2,1)
 
 
 """
@@ -382,16 +431,16 @@ def all_user_inputs(user_list, *widgets, **days):
         print(user_list)
         successful_message(user_list, *widgets)
 
-    #except NameError:
-      #  messagebox.showerror("Dates Error", "Please enter a valid date.")
+    except NameError:
+        messagebox.showerror("Dates Error", "Please enter a valid date.")
 
-    except Exception:
+   # except Exception:
         # messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
-        return
+    #    return
 
-  #  except Exception as e:
-   #     print(e)
-    #    messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
+    except Exception as e:
+        print(e)
+        messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
      #   return # exit the function
 
 
@@ -523,7 +572,7 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
     
     
 
-
+    frame1 = create_frame()
     # **ADD PREVIOUS BUTTON [DONE]
     # ** ADD SEARCH KEYWORDS (maybe in different function?)
     
@@ -556,39 +605,39 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
                     print('LOL')
                     date_display = ''
 
-                date = Label(root, text = date_display)
+                date = Label(frame1, text = date_display)
                 #date = Label(root, text = result['date'] if isinstance(result['date'], str) else result['date'].strftime("%d/%m/%Y"))
                 date.grid(row=row_num, column=1, padx=10, pady=10)
                 row_num +=1
 
-                details = Label(root, text = "Details: " + result['details'])
+                details = Label(frame1, text = "Details: " + result['details'])
                 details.grid(row = row_num, column =1, padx=10, pady=10)
                 row_num +=1
 
-                hours = Label(root, text = "Hours: " + str(result['hours']))
+                hours = Label(frame1, text = "Hours: " + str(result['hours']))
                 hours.grid(row = row_num, column=1, padx=10, pady=10)
                 row_num +=1
 
             #print(date)
             # ** HANDLE ERROR ONCE USER REACHES THE END NameError: free variable 'date' referenced before assignment in enclosing scope
-            next_button = Button(root, text = "Next", command = lambda: view_log(vol, keyword, date, details, hours, previous_button, next_button, skip_num = skip_num))
+            next_button = Button(frame1, text = "Next", command = lambda: view_log(vol, keyword, date, details, hours, previous_button, next_button, skip_num = skip_num))
             next_button.grid(row = row_num, column=2, padx=10, pady=10)
 
             # ValueError: skip must be >= 0
-            previous_button = Button(root, text = "Previous", 
+            previous_button = Button(frame1, text = "Previous", 
             command = lambda: view_log(vol, keyword, date, details, hours, previous_button, next_button, skip_num = skip_num - 2))
             previous_button.grid(row = row_num, column=1, padx=10, pady=10)
 
 
-            edit_entry_button = Button(root, text = "Edit Entry")
+            edit_entry_button = Button(frame1, text = "Edit Entry")
             edit_entry_button.grid(row=6, column=7, padx=10, pady=10)
 
             # if the user changes their mind and wants to return to menu
-            menu_button = Button(root, text = "Menu", 
+            menu_button = Button(frame1, text = "Menu", 
                 command = lambda: menu(date, details, hours, previous_button, next_button, menu_button, edit_entry_button))
             menu_button.grid(row = 5, column = 5, padx=10, pady=10)
 
-            search_keywords_button = Button(root, text = "Search log", command = lambda: search_keywords(vol, next_button, previous_button, edit_entry_button, search_keywords_button, date, details, hours))
+            search_keywords_button = Button(frame1, text = "Search log", command = lambda: search_keywords(vol, next_button, previous_button, edit_entry_button, search_keywords_button, date, details, hours))
             search_keywords_button.grid(row=6, column=5, padx=10, pady=10)
 
             if count == 0:
@@ -596,7 +645,7 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
                 destroy(previous_button, menu_button, edit_entry_button, search_keywords_button)
                 no_logs.grid(row=1, column=1, padx=10, pady=10)
 
-                search_again = Button(root, text="Search again")
+                search_again = Button(root, text="Search again", command = lambda: search_keywords(vol, no_logs, search_again))
                 search_again.grid(row=2, column=1, padx=10,pady=10)
 
 
@@ -628,27 +677,24 @@ def menu(collection, *widgets):
 
     vol = db[collection]
 
-    frame1 = LabelFrame(root, padx=100, pady=100)
-    frame1.grid(row=0, column=0)
+    frame1 = create_frame()
     
     global menu_label, add_record_1, view_2
     menu_label = Label(frame1, text="MENU")
-    menu_label.grid(row=0,column=0,padx=50,pady=10)    
+    menu_label.grid(row=0,column=1,padx=50,pady=10)    
 
     add_record_1 = Button(frame1, text = "Add a new log record", padx = 50, pady=10, command=lambda: add_details(menu_label, add_record_1, view_2, frame1))
 
 
-    add_record_1.grid(row=1, column=0)
+    add_record_1.grid(row=1, column=1)
 
     #search_keywords()
 
     view_2 = Button(frame1, text = "View activity log", padx = 50, pady=10, 
         command = lambda: view_log(vol, menu_label, add_record_1, view_2, frame1))
-    view_2.grid(row=2, column=0)
+    view_2.grid(row=2, column=1)
 
-
-    Grid.rowconfigure(root, 0, weight=1)
-    Grid.columnconfigure(root, 0, weight=1)
+    configure(2, 1)
 
 def main():
 
