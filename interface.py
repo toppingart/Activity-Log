@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 from tkinter import *
 from tkinter import messagebox
+from tkinter import ttk
 from datetime import datetime
 import sys
 
@@ -514,7 +515,6 @@ def view_which_log(*widgets):
     destroy(*widgets)
 
     frame1 = create_frame(0,1)
-
     frame2 = create_frame(1,1)
 
     choose_years = Label(frame1, text = "Which year would you like to look at?")
@@ -557,7 +557,9 @@ def access_collection(button_list, collection_name, *widgets):
     destroy(*widgets)
     menu(collection_name)
     
-
+def onFrameConfigure(canvas):
+    '''Reset the scroll region to encompass the inner frame'''
+    canvas.configure(scrollregion=canvas.bbox("all"))
 
 def view_log(vol, keyword=None, *widgets, skip_num=0):
 
@@ -574,8 +576,8 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
     
     
 
-    frame1 = create_frame(0,1)
-    frame2 = create_frame(1,1)
+   # frame1 = create_frame(0,1)
+    #frame2 = create_frame(1,1)
 
 
 
@@ -599,37 +601,118 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
 
             row_num = 0
 
-            for result in results:
-               # print(result)
+
+            # ---------------------------
+            # creating a scrollbar...
+
+            # create a main frame
+           # main_frame = Frame(root)
+           # main_frame.grid(row=0, column=2)
+           # frame1.grid(sticky = 'news')
+
+          #  frame_canvas = Frame(frame1)
+          #  frame_canvas.grid(row=0, column=1)
+           # frame_canvas.grid_rowconfigure(0, weight=1)
+           # frame_canvas.grid_columnconfigure(1, weight=1)
+
+            frame_main = Frame(root, bg="gray")
+            frame_main.grid(sticky='news')
+
+            root.grid_rowconfigure(0, weight=1)
+            root.columnconfigure(0, weight=1)
+
+            # Create a frame for the canvas with non-zero row&column weights
+            frame_canvas = Frame(frame_main)
+            frame_canvas.grid(row=0, column=0, pady=(5, 0), sticky='nw')
+            frame_canvas.grid_rowconfigure(0, weight=1)
+            frame_canvas.grid_columnconfigure(0, weight=1)
+            # Set grid_propagate to False to allow 5-by-5 buttons resizing later
+            frame_canvas.grid_propagate(False)
+
+            # Add a canvas in that frame
+            canvas = Canvas(frame_canvas, bg="yellow")
+            canvas.grid(row=0, column=0, sticky="news")
+
+            # Link a scrollbar to the canvas
+            vsb = Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
+            vsb.grid(row=0, column=1, sticky='ns')
+            canvas.configure(yscrollcommand=vsb.set)
 
 
-                skip_num +=1
+            # Create a frame to contain the buttons
+            frame_buttons = Frame(canvas, bg="white")
+            canvas.create_window((0,0), window=frame_buttons, anchor='nw')
 
-                if isinstance(result['date'], str):
-                    date_display = result['date']
-                elif isinstance(result['date'], datetime):
-                    date_display = result['date'].strftime("%d/%m/%Y")
+            # Add 9-by-5 buttons to the frame
+            rows = count 
+            columns = 1
+            buttons = [[Button() for j in range(columns)] for i in range(rows)]
+            
+            for i in range(0, rows):
+
+                if isinstance(results[i]['date'], str):
+                    date_display = results[i]['date']
+                elif isinstance(results[i]['date'], datetime):
+                    date_display = results[i]['date'].strftime("%d/%m/%Y")
                 else:
                     print('LOL')
                     date_display = ''
 
-                date = Label(frame1, text = date_display)
+                for j in range(0, columns):
+                    buttons[i][j] = Button(frame_buttons, text= date_display + '\n' + results[i]['details'] + '\n' + str(results[i]['hours']))
+                    buttons[i][j].grid(row=i, column=j, ipadx=330, ipady=50, pady=50)
+
+                #i +=1
+
+                # Update buttonsframes idle tasks to let tkinter calculate buttons sizes
+            frame_buttons.update_idletasks()
+
+            # Resize the canvas frame to show exactly 5-by-5 buttons and the scrollbar
+            first5columns_width = sum([buttons[0][j].winfo_width() for j in range(0, columns)])
+            first5rows_height = sum([buttons[i][0].winfo_height() for i in range(0, rows)])
+            frame_canvas.config(width=buttons[0][j].winfo_width() + vsb.winfo_width(),
+                                    height=buttons[0][j].winfo_height())
+
+            #configure(10,10)
+
+            # Set the canvas scrolling region
+            canvas.config(scrollregion=canvas.bbox("all"))
+            # create a canvas
+           # canvas_1 = Canvas(frame1)
+            #canvas_1.grid(row=2, column=0, pady = (5,0), sticky = 'nw')
+            #Grid.rowconfigure(canvas_1, 0, weight=1)
+            #Grid.columnconfigure(canvas_1, 0, weight =1)
+
+
+            # add scrollbar to the canvas
+           # v_scrollbar = ttk.Scrollbar(frame1, orient = VERTICAL, command = canvas_1.yview)
+            #v_scrollbar.grid(row=0, column=15)
+
+            # configure the canvas
+            #canvas_1.configure(yscrollcommand = v_scrollbar.set)
+            #canvas_1.bind('<Configure>', lambda e: canvas_1.configure(scrollregion = canvas_1.bbox("all")))
+
+            # Create ANOTHER Frame INSIDE the Canvas
+            #frame_2 = Frame(canvas_1)
+
+            # Add that New frame To a Window In The Canvas
+            #canvas_1.create_window((0,0), window=frame_2, anchor="nw")
+
+            # -----------------------------
+            
+           # for result in results:
+               # print(result)
+
+               # info_label = Label(frame_canvas, text = date_display + '\n' + result['details'] + '\n' + str(result['hours']))
                 #date = Label(root, text = result['date'] if isinstance(result['date'], str) else result['date'].strftime("%d/%m/%Y"))
-                date.grid(row=row_num, column=1, padx=10, pady=10)
-                row_num +=1
-
-                details = Label(frame1, text = "Details: " + result['details'])
-                details.grid(row = row_num, column =1, padx=10, pady=10)
-                row_num +=1
-
-                hours = Label(frame1, text = "Hours: " + str(result['hours']))
-                hours.grid(row = row_num, column=1, padx=10, pady=10)
-                row_num +=1
+ 
+            """
 
             #print("Count is",count)
             #print("Skip num is", skip_num)
             #print(date)
             # ** HANDLE ERROR ONCE USER REACHES THE END NameError: free variable 'date' referenced before assignment in enclosing scope
+            
             next_button = Button(frame2, text = "Next", command = lambda: view_log(vol, keyword, date, details, hours, previous_button, next_button, frame1, frame2, skip_num = skip_num))
             next_button.grid(row = row_num, column=2, padx=10, pady=10)
 
@@ -663,18 +746,18 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
                 destroy(next_button)
             if skip_num == 1:
                 destroy(previous_button)
-
+    """
     except NameError as f:
         print(f)
 
-    except ValueError: # there are no "previous" posts to display (the user is currently viewing the first post)
+    except ValueError as v: # there are no "previous" posts to display (the user is currently viewing the first post)
         # widgets have already been destroyed when the button is clicked (does not need to be added again)
         # the default value of skip_num is 0
-        view_log() 
-    #  except Exception as e:
-    #     print(e)
-    
-# {'_id': ObjectId('5fe2adc955957e2ab04be27c'), 'date': datetime.datetime(2017, 8, 24, 0, 0), 'details': 'Principal Breakfast Volunteer', 'hours': 3}
+       # view_log() 
+        print(v)
+    except Exception as e:
+        print(e)
+
     
 """
 Displays the menu where there are two buttons for the user to select from:
