@@ -659,8 +659,9 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
                     date_display = ''
 
                 for j in range(0, columns):
-                    buttons[i][j] = Button(frame_buttons, text= date_display + '\n' + results[i]['details'] + '\n' + str(results[i]['hours']))
-                    buttons[i][j].grid(row=i, column=j, ipadx=330, ipady=50, pady=50)
+                    buttons[i][j] = Button(frame_buttons, height = 10, width=10,  text= 'date: ' + date_display + '\n' + 
+                        'details: ' + results[i]['details'] + '\n' + 'hours: ' + str(results[i]['hours']))
+                    buttons[i][j].grid(row=i, column=j, ipadx=300, ipady=50,pady=50)
 
                 #i +=1
 
@@ -677,6 +678,8 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
 
             # Set the canvas scrolling region
             canvas.config(scrollregion=canvas.bbox("all"))
+
+           
             # create a canvas
            # canvas_1 = Canvas(frame1)
             #canvas_1.grid(row=2, column=0, pady = (5,0), sticky = 'nw')
