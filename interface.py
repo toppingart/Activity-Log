@@ -88,16 +88,18 @@ Output: None
 def to_datetime(vol, results):
     for result in results:
         date = result['date']
-        if isinstance(date,str) and len(date) == 10:
-            datetime_obj = datetime.strptime(date, "%m/%d/%Y")
+        #12/02/20
+        if isinstance(date,str) and len(date.strip()) == 8:
+            datetime_obj = datetime.strptime(date, "%m/%d/%y")
             print("obj",datetime_obj)
             vol.update_one({'_id': result['_id']}, {'$set': {'date': datetime_obj}})
 
-        elif isinstance(date,str) and len(date) == 23:
-            start_date = result['date'][:10]
-            end_date = result['date'][14:]
-            start_datetime = datetime.strptime(start_date, "%m/%d/%Y")
-            end_datetime = datetime.strptime(end_date, "%m/%d/%Y")
+        elif isinstance(date,str) and len(date.strip()) == 17:
+            # 12/01/20-12/02/20
+            start_date = result['date'][:8]
+            end_date = result['date'][9:]
+            start_datetime = datetime.strptime(start_date, "%m/%d/%y")
+            end_datetime = datetime.strptime(end_date, "%m/%d/%y")
             vol.update_one({'_id': result['_id']}, {'$set': {'startdate': start_datetime}})
             vol.update_one({'_id': result['_id']}, {'$set': {'enddate': end_datetime}})
 
@@ -125,6 +127,11 @@ def add_details(vol, done, details, *widgets):
     configure(2, 1)
 
     if not done:
+
+        go_back_button = Button(frame1, text = "Go back", 
+            command = lambda: menu(vol, details_text, details_entry, submit_button, frame1))
+        go_back_button.grid(row=3, column=1, padx=10, pady=10)
+
         submit_button = Button(frame1, text = "Submit", command = lambda: add_hours(vol, details_entry.get('1.0', 'end'), False, details_text, details_entry, submit_button, frame1))
         submit_button.grid(row=2, column=1, padx=50,pady=50)
     else:
@@ -212,17 +219,27 @@ def make_changes(type_of_change, edited_entry, vol, result, *widgets):
     destroy(*widgets)
     
     if type_of_change == 1:
-        successful_message(vol, None, 2)
         vol.update_one({'_id': result['_id']}, {'$set': {'details': edited_entry}})
+        successful_message(vol, None, 2)
     elif type_of_change == 2:
-        successful_message(vol, None, 2)
         vol.update_one({'_id': result['_id']}, {'$set': {'hours': edited_entry}})
-    elif type_of_change == 3:
         successful_message(vol, None, 2)
+    elif type_of_change == 3:
+        check_date(edited_entry)
         vol.update_one({'_id': result['_id']}, {'$set': {'date': edited_entry}})
-
+        to_datetime(vol, [result])
+        successful_message(vol, None, 2)
     else:
-        pass#vol.update_one({'_id': result['_id']}, {'$set': {'date': edited_entry}})
+        check_date(edited_entry[0])
+        check_date(edited_entry[1])
+        vol.update_one({'_id': result['_id']}, {'$set': {'startdate': edited_entry[0], 
+            'enddate': edited_entry[1]}})
+
+        datetime_start = datetime.strptime(edited_entry[0], "%m/%d/%y")
+        datetime_end = datetime.strptime(edited_entry[1], "%m/%d/%y")
+        vol.update_one({'_id': result['_id']}, {'$set': {'startdate': datetime_start, 'enddate': datetime_end}})
+        #to_datetime(vol, [result])
+        #successful_message(vol, None, 2)
 
 
 
@@ -344,11 +361,12 @@ Output: None
 
 """
 
-def multiple_days_option(vol, user_list, *widgets):
+def multiple_days_option(vol, user_list, done, *widgets):
 
     destroy(*widgets)
 
     frame1 = create_frame(0,1)
+    configure(5,1)
 
     days_text = Label(frame1, text = "What days did this take place (eg. 12/25/2020 - 01/01/2021)" )
     days_text.grid(row=0,column=1,padx=50,pady=10)
@@ -365,16 +383,25 @@ def multiple_days_option(vol, user_list, *widgets):
     end_day_entry = Entry(frame1)
     end_day_entry.grid(row=4, column=1, padx=50, pady=10)
 
-
-    submit_button = Button(frame1, text = "Submit", 
+    if not done:
+        submit_button = Button(frame1, text = "Submit", 
         command = lambda: all_user_inputs(vol, user_list, days_text, start_day_text, end_day_text, 
             start_day_entry, end_day_entry, submit_button, frame1,
             startdate = start_day_entry.get(), enddate = end_day_entry.get()))
 
 
-    submit_button.grid(row=5, column=1, padx=50,pady=50)
+        submit_button.grid(row=5, column=1, padx=50,pady=50)
 
-    configure(5,1)
+    else:
+
+
+        submit_button = Button(frame1, text = "Submit", 
+        command = lambda: make_changes(4, [start_day_entry.get(), end_day_entry.get()], vol, user_list, days_text, start_day_text, end_day_text, 
+            start_day_entry, end_day_entry, submit_button, frame1))
+
+
+        submit_button.grid(row=5, column=1, padx=50,pady=50)
+
 
 """
 Checks if the date entered by the user is a valid date (valid day, month, and year).
@@ -386,8 +413,9 @@ Output: None
 
 def check_date(date):
     try:
-        if len(date.strip()) == 10:
-            check_date = datetime.strptime(date, "%m/%d/%Y") 
+        print(len(date.strip()))
+        if len(date.strip()) == 8:
+            check_date = datetime.strptime(date, "%m/%d/%y") 
           
         else:
             raise ValueError
@@ -706,14 +734,15 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
             buttons = [[Button() for j in range(columns)] for i in range(rows)]
             
             for i in range(0, rows):
-
-                if isinstance(results[i]['date'], str):
+                #print(results[i])
+                if vol.count_documents({"startdate": {"$exists": True}, '_id': results[i]['_id']}) == 1 :
+                    #date_display = results[i]['startdate']+ '- ' + results[i]['enddate']
+                    date_display = results[i]['startdate'].strftime('%m/%d/%y') + ' - ' + results[i]['enddate'].strftime('%m/%d/%y')
+                elif isinstance(results[i]['date'], str):
                     date_display = results[i]['date']
-                elif isinstance(results[i]['date'], datetime):
-                    date_display = results[i]['date'].strftime("%d/%m/%Y")
                 else:
-                    print('LOL')
-                    date_display = ''
+                    date_display = results[i]['date'].strftime('%m/%d/%y')
+
 
                 for j in range(0, columns):
                     buttons[i][j] = Button(frame_buttons, height = 10, width=10,  text= 'date: ' + date_display + '\n' + 
@@ -820,11 +849,10 @@ def make_entry_changes(vol, result, *widgets):
 def make_date_changes(vol, result, *widgets):
     #results = vol.find({"startdate": {"$exists": True}, '_id': result['_id']})
     count = vol.count_documents({"startdate": {"$exists": True}, '_id': result['_id']})
-    print(count)
     if count == 0:
         one_day_option(vol, result, True, *widgets)
     else:
-        pass
+        multiple_days_option(vol, result, True, *widgets)
 
     
 """
