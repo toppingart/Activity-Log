@@ -111,10 +111,9 @@ Output: None
 Note: The user exits this function when the SUBMIT button is pressed (the user is then sent to add_hours())
 """
 
-def add_details(vol, *widgets):
+def add_details(vol, done, details, *widgets):
 
-    for widget in widgets:
-        destroy(widget)
+    destroy(*widgets)
 
     frame1 = create_frame(0,1)
 
@@ -123,10 +122,16 @@ def add_details(vol, *widgets):
     details_entry = Text(frame1, width=30, height=10)
     details_entry.grid(row=1, column=1)
 
-    submit_button = Button(frame1, text = "Submit", command = lambda: add_hours(vol, details_entry.get('1.0', 'end'), details_text, details_entry, submit_button, frame1))
-    submit_button.grid(row=2, column=1, padx=50,pady=50)
-
     configure(2, 1)
+
+    if not done:
+        submit_button = Button(frame1, text = "Submit", command = lambda: add_hours(vol, details_entry.get('1.0', 'end'), False, details_text, details_entry, submit_button, frame1))
+        submit_button.grid(row=2, column=1, padx=50,pady=50)
+    else:
+        submit_button = Button(frame1, text = "Submit", command = lambda: make_changes(1, details_entry.get('1.0', 'end'), vol, details, details_text, details_entry, submit_button, frame1))
+        submit_button.grid(row=2, column=1, padx=50,pady=50)
+
+    
 
     #add_hours(details_text, submit_button)
     # add_dates()
@@ -140,7 +145,14 @@ Output: None
 
 """
 def destroy(*widgets):
+
     for item in widgets:
+
+        if isinstance(item, list):
+            for i in item[0]:
+                i.destroy()
+            continue
+
         item.destroy()
 
 
@@ -154,14 +166,8 @@ Output: None
 
 """
 
-def add_hours(vol, details, *widgets):
+def add_hours(vol, details, done, *widgets):
 
-
-    if len(details.strip()) == 0:
-        messagebox.showerror("Details Error", "Please enter some details.")
-        return
-
-    user_input_list = [details] # obtained from add_details()
     destroy(*widgets)
 
     frame1 = LabelFrame(root)
@@ -173,15 +179,47 @@ def add_hours(vol, details, *widgets):
     hours_entry = Entry(frame1)
     hours_entry.grid(row=1, column=1,padx=50,pady=50)
 
-    submit_button = Button(frame1, text = "Submit", 
-        command = lambda: add_dates(vol, user_input_list, hours_entry.get(), hours_text, hours_entry, submit_button, frame1))
-    submit_button.grid(row=2, column=1, padx=50,pady=50)
+    if done == False:
+
+        if len(details.strip()) == 0:
+            messagebox.showerror("Details Error", "Please enter some details.")
+            return
+
+        user_input_list = [details] # obtained from add_details()
+
+        submit_button = Button(frame1, text = "Submit", 
+            command = lambda: add_dates(vol, user_input_list, hours_entry.get(), hours_text, hours_entry, submit_button, frame1))
+        submit_button.grid(row=2, column=1, padx=50,pady=50)
+
+    else: 
+
+        submit_button = Button(frame1, text = "Submit",
+            command = lambda: make_changes(2, hours_entry.get(), vol, details, hours_text, hours_entry, submit_button, frame1))
+        submit_button.grid(row=2, column=1, padx=50,pady=50)
+
+
 
     Grid.columnconfigure(root, index=1, weight=1)
 
     Grid.rowconfigure(root, index=0, weight=1)
     Grid.rowconfigure(root, index=1, weight=1)
     Grid.rowconfigure(root, index=2, weight=1)
+
+
+# details - 1, hours-2, date - 3, dates - 4
+def make_changes(type_of_change, edited_entry, vol, result, *widgets):
+
+    destroy(*widgets)
+    
+    if type_of_change == 1:
+        successful_message(vol, None, 2)
+        vol.update_one({'_id': result['_id']}, {'$set': {'details': edited_entry}})
+    elif type_of_change == 2:
+        successful_message(vol, None, 2)
+        vol.update_one({'_id': result['_id']}, {'$set': {'hours': edited_entry}})
+    else:
+        pass#vol.update_one({'_id': result['_id']}, {'$set': {'date': edited_entry}})
+
 
 
 """
@@ -359,29 +397,37 @@ Output: None
 
 """
 
-def successful_message(vol, user_list, *widgets):
+def successful_message(vol, user_list, type_of_success, *widgets):
 
     
     try:
-        if len(user_list) == 3: # date (2017-07-31T00:00:00.000+00:00), detail, hours
-            vol_record = {"date": user_list[2], "details": user_list[0], "hours": user_list[1] }
-        else: # date ("02/08/2017 - 04/08/2017"), detail, hours, startdate, enddate
-            vol_record = {"date": user_list[2] + " - " + user_list[3], "details": user_list[0], "hours": user_list[1]}
+
+        destroy(*widgets)
+        frame1 = create_frame(0,1)
+        frame2 = create_frame(1,1)
+
+        if type_of_success == 1:
+            if len(user_list) == 3: # date (2017-07-31T00:00:00.000+00:00), detail, hours
+                vol_record = {"date": user_list[2], "details": user_list[0], "hours": user_list[1] }
+            else: # date ("02/08/2017 - 04/08/2017"), detail, hours, startdate, enddate
+                vol_record = {"date": user_list[2] + " - " + user_list[3], "details": user_list[0], "hours": user_list[1]}
 
    # vol_record = {"details"}
-        vol.insert_one(vol_record)
-        to_datetime(vol, [vol_record])
+            vol.insert_one(vol_record)
+            to_datetime(vol, [vol_record])
+
+            success_message = Label(frame1, text = "The record has been successfully added to the database!")
+            success_message.grid(row=0, column=1)
+
+        else:
+
+            success_message = Label(frame1, text = "The record has been successfully edited!")
+            success_message.grid(row=0, column=1)
+
     # ['a', '1', '25/12/2020']
     # ['a', '1', '25/12/2020', '01/01/2021']
     # rental = {"member_renting": ("Saeed", "7806808181"), "movie_rented": movie_ids[1]}
 
-        destroy(*widgets)
-
-        frame1 = create_frame(0,1)
-        frame2 = create_frame(1,1)
-
-        success_message = Label(frame1, text = "The record has been successfully added to the database!")
-        success_message.grid(row=0, column=1)
 
         # exit option
         exit_button= Button(frame2, text = "Exit", command = lambda: sys.exit()) # if pressed, exits the program
@@ -389,7 +435,7 @@ def successful_message(vol, user_list, *widgets):
 
         # go back to menu option
         back_to_menu_button = Button(frame2, text = "Back to menu", 
-        command = lambda: menu(success_message, exit_button, back_to_menu_button))
+        command = lambda: menu(vol, success_message, exit_button, back_to_menu_button, frame1, frame2))
         back_to_menu_button.grid(row=2, column=1, padx=10, pady=10)
 
         configure(2,1)
@@ -436,7 +482,7 @@ def all_user_inputs(vol, user_list, *widgets, **days):
 
            # destroy(*widgets)
         print(user_list)
-        successful_message(vol, user_list, *widgets)
+        successful_message(vol, user_list, 1, *widgets)
 
     except NameError as n:
         print(n)
@@ -660,7 +706,9 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
 
                 for j in range(0, columns):
                     buttons[i][j] = Button(frame_buttons, height = 10, width=10,  text= 'date: ' + date_display + '\n' + 
-                        'details: ' + results[i]['details'] + '\n' + 'hours: ' + str(results[i]['hours']))
+                        'details: ' + results[i]['details'] + '\n' + 'hours: ' + str(results[i]['hours']),
+                        command = lambda i=i: make_entry_changes(vol, results[i], buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
+                    menu_button, search_keywords_button))
                     buttons[i][j].grid(row=i, column=j, ipadx=300, ipady=50,pady=50)
 
                 #i +=1
@@ -678,6 +726,15 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
 
             # Set the canvas scrolling region
             canvas.config(scrollregion=canvas.bbox("all"))
+
+            search_keywords_button = Button(root, text = "Search using keywords instead", 
+                command = lambda: search_keywords(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
+                    menu_button, search_keywords_button))
+            search_keywords_button.grid(row=1, column=0, padx=10, pady=10)
+
+            menu_button = Button(root, text = "Menu", 
+                command = lambda: menu(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, menu_button, search_keywords_button))
+            menu_button.grid(row = 2, column = 0, padx=10, pady=10)
 
            
             # create a canvas
@@ -712,43 +769,7 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
             """
 
             #print("Count is",count)
-            #print("Skip num is", skip_num)
-            #print(date)
-            # ** HANDLE ERROR ONCE USER REACHES THE END NameError: free variable 'date' referenced before assignment in enclosing scope
-            
-            next_button = Button(frame2, text = "Next", command = lambda: view_log(vol, keyword, date, details, hours, previous_button, next_button, frame1, frame2, skip_num = skip_num))
-            next_button.grid(row = row_num, column=2, padx=10, pady=10)
-
-            # ValueError: skip must be >= 0
-            previous_button = Button(frame2, text = "Previous", 
-            command = lambda: view_log(vol, keyword, date, details, hours, previous_button, next_button, frame1, frame2, skip_num = skip_num - 2))
-            previous_button.grid(row = row_num, column=1, padx=10, pady=10)
-
-
-            edit_entry_button = Button(frame2, text = "Edit Entry")
-            edit_entry_button.grid(row=row_num, column=3, padx=10, pady=10)
-
-            # if the user changes their mind and wants to return to menu
-            menu_button = Button(frame2, text = "Menu", 
-                command = lambda: menu(vol, date, details, hours, previous_button, next_button, menu_button, edit_entry_button, frame1, frame2))
-            menu_button.grid(row = row_num, column = 4, padx=10, pady=10)
-
-            search_keywords_button = Button(frame2, text = "Search log", command = lambda: search_keywords(vol, menu_button, next_button, previous_button, edit_entry_button, search_keywords_button, date, details, hours))
-            search_keywords_button.grid(row=row_num, column=5, padx=10, pady=10)
-
-            if count == 0:
-                no_logs = Label(root, text="No search results have appeared. Try something else.") 
-                destroy(previous_button, menu_button, edit_entry_button, search_keywords_button)
-                no_logs.grid(row=1, column=1, padx=10, pady=10)
-
-                search_again = Button(root, text="Search again", command = lambda: search_keywords(vol, no_logs, search_again))
-                search_again.grid(row=2, column=1, padx=10,pady=10)
-
-
-            if skip_num == count:
-                destroy(next_button)
-            if skip_num == 1:
-                destroy(previous_button)
+ 
     """
     except NameError as f:
         print(f)
@@ -760,6 +781,30 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
         print(v)
     except Exception as e:
         print(e)
+
+
+def make_entry_changes(vol, result, *widgets):
+
+    destroy(*widgets)
+
+    where_to_edit = Label(text="What part would you like to change?")
+    where_to_edit.grid(row=1, column=1, padx=10, pady=10)
+
+    details_button = Button(root, text = "Details", command = lambda: add_details(vol, True, result, 
+        where_to_edit, details_button, hours_button, dates_button))
+    details_button.grid(row=2, column=0, padx=10, pady=10)
+
+    hours_button = Button(root, text = "Hours", command = lambda: add_hours(vol, result, True, 
+        where_to_edit, details_button, hours_button, dates_button))
+    hours_button.grid(row=2, column=1, padx=10, pady=10)
+
+    dates_button = Button(root, text = "Date(s)")
+    dates_button.grid(row=2, column=2, padx=10, pady=10)
+
+    go_back_button = Button(root, text = "Go back", 
+        command = lambda: view_log(vol, None, where_to_edit, details_button, hours_button, dates_button, go_back_button))
+    go_back_button.grid(row=3, column=1, padx=10, pady=10)
+
 
     
 """
@@ -782,7 +827,7 @@ def menu(collection, *widgets):
     menu_label = Label(frame1, text="MENU")
     menu_label.grid(row=0,column=1,padx=50,pady=10)    
 
-    add_record_1 = Button(frame1, text = "Add a new log record", padx = 50, pady=10, command=lambda: add_details(vol, menu_label, add_record_1, view_2, frame1))
+    add_record_1 = Button(frame1, text = "Add a new log record", padx = 50, pady=10, command=lambda: add_details(vol, False, None, menu_label, add_record_1, view_2, frame1))
 
 
     add_record_1.grid(row=1, column=1)
@@ -842,3 +887,7 @@ main()
 #print(len("04/09/2017 - 05/09/2017"))
 # 23
 # test(results)
+
+
+
+#https://stackoverflow.com/questions/10865116/tkinter-creating-buttons-in-for-loop-passing-command-arguments
