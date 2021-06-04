@@ -217,6 +217,10 @@ def make_changes(type_of_change, edited_entry, vol, result, *widgets):
     elif type_of_change == 2:
         successful_message(vol, None, 2)
         vol.update_one({'_id': result['_id']}, {'$set': {'hours': edited_entry}})
+    elif type_of_change == 3:
+        successful_message(vol, None, 2)
+        vol.update_one({'_id': result['_id']}, {'$set': {'date': edited_entry}})
+
     else:
         pass#vol.update_one({'_id': result['_id']}, {'$set': {'date': edited_entry}})
 
@@ -257,7 +261,7 @@ def add_dates(vol, user_list, hours,*widgets):
 
     # first option the user can select 
     one_day_button = Button(frame1, text = "One day", 
-        command = lambda: one_day_option(vol, user_list, dates_text, one_day_button, m_days_button, frame1))
+        command = lambda: one_day_option(vol, user_list, False, dates_text, one_day_button, m_days_button, frame1))
 
     one_day_button.grid(row=1, column=1, padx=50,pady=50)
 
@@ -299,11 +303,12 @@ itself, but will be used in the all_user_inputs()
 Output: None
 
 """
-def one_day_option(vol, user_list, *widgets):
+def one_day_option(vol, user_list, done, *widgets):
 
     destroy(*widgets)
 
     frame1 = create_frame(0,1)
+    configure(2, 1)
 
     # DATE CHANGED
     day_text = Label(frame1, text = "What day did this take place (eg. 12/25/2020) ")
@@ -312,11 +317,17 @@ def one_day_option(vol, user_list, *widgets):
     day_entry = Entry(frame1) # textbox
     day_entry.grid(row=1,column=1,padx=50,pady=10)
 
-    submit_button = Button(frame1, text = "Submit", 
+    if not done:
+        submit_button = Button(frame1, text = "Submit", 
         command = lambda: all_user_inputs(vol, user_list, day_text, day_entry, submit_button, frame1, date = day_entry.get()))
-    submit_button.grid(row=2, column=1, padx=50,pady=50)
+        submit_button.grid(row=2, column=1, padx=50,pady=50)
+    else:
+        submit_button = Button(frame1, text = "Submit", 
+        command = lambda: make_changes(3, day_entry.get(), vol, user_list, day_text, day_entry, submit_button, frame1))
+        submit_button.grid(row=2, column=1, padx=50,pady=50)
 
-    configure(2, 1)
+
+
 
 
 """
@@ -798,13 +809,22 @@ def make_entry_changes(vol, result, *widgets):
         where_to_edit, details_button, hours_button, dates_button))
     hours_button.grid(row=2, column=1, padx=10, pady=10)
 
-    dates_button = Button(root, text = "Date(s)")
+    dates_button = Button(root, text = "Date(s)", command = lambda: make_date_changes(vol, result,
+        where_to_edit, details_button, hours_button, dates_button, go_back_button))
     dates_button.grid(row=2, column=2, padx=10, pady=10)
 
     go_back_button = Button(root, text = "Go back", 
         command = lambda: view_log(vol, None, where_to_edit, details_button, hours_button, dates_button, go_back_button))
     go_back_button.grid(row=3, column=1, padx=10, pady=10)
 
+def make_date_changes(vol, result, *widgets):
+    #results = vol.find({"startdate": {"$exists": True}, '_id': result['_id']})
+    count = vol.count_documents({"startdate": {"$exists": True}, '_id': result['_id']})
+    print(count)
+    if count == 0:
+        one_day_option(vol, result, True, *widgets)
+    else:
+        pass
 
     
 """
