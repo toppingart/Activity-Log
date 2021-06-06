@@ -4,37 +4,24 @@ from tkinter import messagebox
 from tkinter import ttk
 from datetime import datetime
 import sys
+import globals
 
-# maybe do data visualization stuff with this later? see how much you volunteer over time or on certain periods
-
-
-"""
-The results of the database is displayed (when the user chooses to view the activity log)
-
-Input: a list of the result(s)
-Output: None
-
-"""
-def display_results(results):
-    for index, result in enumerate(results, start = 1):
-        print('Result', index)
-
-        date = result['date']
-        print('DATE: ', date[:10]) if isinstance(date, str) and len(date) == 24 else print('DATE: ', date)
-        print('DETAILS: ', result['details'])
-        print('NUMBER OF HOURS: ', result['hours'], '\n')
-
-def sort_by_factor():
-    pass
+# maybe do data visualization?
 
 """
 The user enters one or more keywords to narrow down the results (when looking for a specific record).
 
-Input: None
+Input: 
+- vol: allows us to access the contents of the collection
+- *widgets: 0 or more widgets to be destroyed (cleared before displaying new widgets)
+
 Output: None
+
+Calls: search_with_input() or view_log()
 
 """
 def search_keywords(vol, *widgets):
+
     destroy(*widgets)
 
     frame1 = create_frame(0,1)
@@ -45,53 +32,59 @@ def search_keywords(vol, *widgets):
     search_entry = Entry(frame1)
     search_entry.grid(row=1, column=1, padx=10, pady=10)
 
-    submit = Button(frame1, text = "Submit", command = lambda: search_with_input(vol, search_entry.get(), search_label, search_entry, submit, view_all, frame1))
+    submit = Button(frame1, text = "Submit", 
+        command = lambda: search_with_input(vol, search_entry.get(), search_label, search_entry, submit, view_all, frame1))
     submit.grid(row=2, column=1, padx=10, pady=10)
 
-    view_all = Button(frame1, text = "View all instead", command = lambda: view_log(vol, None, search_label, search_entry, submit, view_all, frame1))
+    view_all = Button(frame1, text = "View all instead", 
+        command = lambda: view_log(vol, None, search_label, search_entry, submit, view_all, frame1))
     view_all.grid(row=3, column=1, padx=10, pady=10)
 
     configure(3,1)
-   # keyword = '.*stu.*' # wildcard characters in between
-   # keyword = '*'+ search_entry.get() + '*'
-    #print(keyword)
-    #user_keyword = input('What keyword would you like to search? ')
-   # results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
-   # results = vol.find({'hours': 0.5, 'details': 'Interact Club Meeting'})
-    #display_results(results)
 
+
+"""
+Adds wildcards (*) and allows for case-insenstive searches.
+
+Input:
+- vol
+- entry: keyword used for searching
+- *widgets
+
+Output: None
+
+Calls: view_log()
+
+"""
 def search_with_input(vol, entry, *widgets):
+
     destroy(*widgets)
 
-    # example: results = db.collections.find({'my_key': {'$regex': '.*2019.*'}})
+    # wildcards are used in between the entry
     keyword = '.*' + entry + '.*'
    
-    #results = vol.find({'hours': 0.5})
+    # case insensitive is allowed
     results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
+
     view_log(vol, keyword, *widgets)
-   # display_results(results)
-
-def alter_date_format():
-    pass
-    # https://www.programiz.com/python-programming/datetime/strptime
-
 
 """
 Used to change the date (as a string) to a datetime object.
 
-Input: the results (dictionaries in a list)
+Input: 
+- vol
+- the results (dictionaries in a list)
+
 Output: None
-
-# ** CHANGE TO USE FOR CURRENT TASK (changing the strings to datetime before adding it into the database in successful_message())
-
 """
 def to_datetime(vol, results):
+
     for result in results:
         date = result['date']
-        #12/02/20
+
         if isinstance(date,str) and len(date.strip()) == 8:
+            #12/02/20
             datetime_obj = datetime.strptime(date, "%m/%d/%y")
-            print("obj",datetime_obj)
             vol.update_one({'_id': result['_id']}, {'$set': {'date': datetime_obj}})
 
         elif isinstance(date,str) and len(date.strip()) == 17:
@@ -103,20 +96,24 @@ def to_datetime(vol, results):
             vol.update_one({'_id': result['_id']}, {'$set': {'startdate': start_datetime}})
             vol.update_one({'_id': result['_id']}, {'$set': {'enddate': end_datetime}})
 
-
 """
 The user enters some details about their experience.
 
-Input: None
+Input: 
+- vol
+- edited: True if the user is editing this entry. False if it is a new entry
+- details: None if it's a new entry. Otherwise, it contains the information about the edited entry 
+(eg. {'_id': ObjectId('60b4418688db9bce7b378c09'), 'date': datetime.datetime(2020, 12, 27, 0, 0), 'details': 'aa\n', 'hours': '1'})
+- *widgets
+
 Output: None
 
-Note: The user exits this function when the SUBMIT button is pressed (the user is then sent to add_hours())
+Calls: add_hours() or types_of_changes()
 """
 
-def add_details(vol, done, details, *widgets):
+def add_details(vol, edited, details, *widgets):
 
     destroy(*widgets)
-
     frame1 = create_frame(0,1)
 
     details_text = Label(frame1, text="Give some details about the experience.")
@@ -126,7 +123,7 @@ def add_details(vol, done, details, *widgets):
 
     configure(2, 1)
 
-    if not done:
+    if not edited:
 
         go_back_button = Button(frame1, text = "Go back", 
             command = lambda: menu(vol, details_text, details_entry, submit_button, frame1))
@@ -134,46 +131,39 @@ def add_details(vol, done, details, *widgets):
 
         submit_button = Button(frame1, text = "Submit", command = lambda: add_hours(vol, details_entry.get('1.0', 'end'), False, details_text, details_entry, submit_button, frame1))
         submit_button.grid(row=2, column=1, padx=50,pady=50)
-    else:
-        submit_button = Button(frame1, text = "Submit", command = lambda: make_changes(1, details_entry.get('1.0', 'end'), vol, details, details_text, details_entry, submit_button, frame1))
+
+    else: # if the user is making edits to their entry
+        submit_button = Button(frame1, text = "Submit", command = lambda: types_of_changes(1, details_entry.get('1.0', 'end'), vol, details, details_text, details_entry, submit_button, frame1))
         submit_button.grid(row=2, column=1, padx=50,pady=50)
-
-    
-
-    #add_hours(details_text, submit_button)
-    # add_dates()
-
 
 """
 The widgets are destroyed so that the other widgets can be placed on the screen.
 
-Input: Any number of widgets (*args) which will be in a list
+Input: Any number of widgets (*args) which will be in a list (input can be a single widget or a list of widgets)
 Output: None
 
 """
 def destroy(*widgets):
 
     for item in widgets:
-
         if isinstance(item, list):
             for i in item[0]:
                 i.destroy()
             continue
-
         item.destroy()
-
 
 """
 The user is asked to enter the number of hours of their experience (how long did their volunteering/activity take?)
 
-Input: the details of the experience (as a string), any number of widgets that was on the screen when the user 
-was asked to enter the details (all the widgets from the add_details())
+Input: 
+- vol
+- details: details of the experience (as a string)
+- edited
+- *widgets (NOTE: all the widgets are from the add_details())
 
 Output: None
-
 """
-
-def add_hours(vol, details, done, *widgets):
+def add_hours(vol, details, edited, *widgets):
 
     destroy(*widgets)
 
@@ -186,8 +176,8 @@ def add_hours(vol, details, done, *widgets):
     hours_entry = Entry(frame1)
     hours_entry.grid(row=1, column=1,padx=50,pady=50)
 
-    if done == False:
-
+    if edited == False:
+        # error handling
         if len(details.strip()) == 0:
             messagebox.showerror("Details Error", "Please enter some details.")
             return
@@ -198,23 +188,26 @@ def add_hours(vol, details, done, *widgets):
             command = lambda: add_dates(vol, user_input_list, hours_entry.get(), hours_text, hours_entry, submit_button, frame1))
         submit_button.grid(row=2, column=1, padx=50,pady=50)
 
-    else: 
-
+    else: # happens if the user wants to make edits to their entry (not a new entry)
         submit_button = Button(frame1, text = "Submit",
-            command = lambda: make_changes(2, hours_entry.get(), vol, details, hours_text, hours_entry, submit_button, frame1))
+            command = lambda: types_of_changes(2, hours_entry.get(), vol, details, hours_text, hours_entry, submit_button, frame1))
         submit_button.grid(row=2, column=1, padx=50,pady=50)
 
+    configure(2, 1)
 
+"""
+Will take the appropiate action depending on what part ot the entry the user wants to make edits to
 
-    Grid.columnconfigure(root, index=1, weight=1)
+input:
+- type_of_change:  details - 1, hours-2, date - 3, dates (start and end date) - 4 (int)
+- edited_entry: edits made by the user (str)
+- vol
+- result: (eg. {'_id': ObjectId('60b4418688db9bce7b378c09'), 'date': datetime.datetime(2020, 12, 27, 0, 0), 'details': 'aa\n', 'hours': '1'})
+- *widgets
 
-    Grid.rowconfigure(root, index=0, weight=1)
-    Grid.rowconfigure(root, index=1, weight=1)
-    Grid.rowconfigure(root, index=2, weight=1)
-
-
-# details - 1, hours-2, date - 3, dates - 4
-def make_changes(type_of_change, edited_entry, vol, result, *widgets):
+Calls: successful_message(), check_date(), to_datetime()
+"""
+def types_of_changes(type_of_change, edited_entry, vol, result, *widgets):
 
     destroy(*widgets)
     
@@ -232,8 +225,8 @@ def make_changes(type_of_change, edited_entry, vol, result, *widgets):
     else:
         check_date(edited_entry[0])
         check_date(edited_entry[1])
-        vol.update_one({'_id': result['_id']}, {'$set': {'startdate': edited_entry[0], 
-            'enddate': edited_entry[1]}})
+       # vol.update_one({'_id': result['_id']}, {'$set': {'startdate': edited_entry[0], 
+         #   'enddate': edited_entry[1]}})
 
         datetime_start = datetime.strptime(edited_entry[0], "%m/%d/%y")
         datetime_end = datetime.strptime(edited_entry[1], "%m/%d/%y")
@@ -340,7 +333,7 @@ def one_day_option(vol, user_list, done, *widgets):
         submit_button.grid(row=2, column=1, padx=50,pady=50)
     else:
         submit_button = Button(frame1, text = "Submit", 
-        command = lambda: make_changes(3, day_entry.get(), vol, user_list, day_text, day_entry, submit_button, frame1))
+        command = lambda: types_of_changes(3, day_entry.get(), vol, user_list, day_text, day_entry, submit_button, frame1))
         submit_button.grid(row=2, column=1, padx=50,pady=50)
 
 
@@ -396,7 +389,7 @@ def multiple_days_option(vol, user_list, done, *widgets):
 
 
         submit_button = Button(frame1, text = "Submit", 
-        command = lambda: make_changes(4, [start_day_entry.get(), end_day_entry.get()], vol, user_list, days_text, start_day_text, end_day_text, 
+        command = lambda: types_of_changes(4, [start_day_entry.get(), end_day_entry.get()], vol, user_list, days_text, start_day_text, end_day_text, 
             start_day_entry, end_day_entry, submit_button, frame1))
 
 
@@ -602,6 +595,8 @@ def view_which_log(*widgets):
     frame1 = create_frame(0,1)
     frame2 = create_frame(1,1)
 
+   # frame1['bg'] = 'azure'
+
     choose_years = Label(frame1, text = "Which year would you like to look at?")
     choose_years.grid(row = 0, column =1)
 
@@ -646,6 +641,14 @@ def onFrameConfigure(canvas):
     '''Reset the scroll region to encompass the inner frame'''
     canvas.configure(scrollregion=canvas.bbox("all"))
 
+
+def no_entries(vol, *widgets):
+    destroy(*widgets)
+    no_logs = Label(root, text = "There are currently no entries in this collection")
+    no_logs.grid(row=1, column=1)
+
+
+
 def view_log(vol, keyword=None, *widgets, skip_num=0):
 
     # otherwise !label
@@ -686,6 +689,9 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
 
             row_num = 0
 
+            if count == 0:
+                print('heres')
+                no_entries(vol)
 
             # ---------------------------
             # creating a scrollbar...
@@ -699,82 +705,82 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
           #  frame_canvas.grid(row=0, column=1)
            # frame_canvas.grid_rowconfigure(0, weight=1)
            # frame_canvas.grid_columnconfigure(1, weight=1)
+            else:
+                frame_main = Frame(root, bg="gray")
+                frame_main.grid(sticky='news')
 
-            frame_main = Frame(root, bg="gray")
-            frame_main.grid(sticky='news')
+                root.grid_rowconfigure(0, weight=1)
+                root.columnconfigure(0, weight=1)
 
-            root.grid_rowconfigure(0, weight=1)
-            root.columnconfigure(0, weight=1)
+                # Create a frame for the canvas with non-zero row&column weights
+                frame_canvas = Frame(frame_main)
+                frame_canvas.grid(row=0, column=0, pady=(5, 0), sticky='nw')
+                frame_canvas.grid_rowconfigure(0, weight=1)
+                frame_canvas.grid_columnconfigure(0, weight=1)
+                # Set grid_propagate to False to allow 5-by-5 buttons resizing later
+                frame_canvas.grid_propagate(False)
 
-            # Create a frame for the canvas with non-zero row&column weights
-            frame_canvas = Frame(frame_main)
-            frame_canvas.grid(row=0, column=0, pady=(5, 0), sticky='nw')
-            frame_canvas.grid_rowconfigure(0, weight=1)
-            frame_canvas.grid_columnconfigure(0, weight=1)
-            # Set grid_propagate to False to allow 5-by-5 buttons resizing later
-            frame_canvas.grid_propagate(False)
+                # Add a canvas in that frame
+                canvas = Canvas(frame_canvas, bg="yellow")
+                canvas.grid(row=0, column=0, sticky="news")
 
-            # Add a canvas in that frame
-            canvas = Canvas(frame_canvas, bg="yellow")
-            canvas.grid(row=0, column=0, sticky="news")
-
-            # Link a scrollbar to the canvas
-            vsb = Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
-            vsb.grid(row=0, column=1, sticky='ns')
-            canvas.configure(yscrollcommand=vsb.set)
-
-
-            # Create a frame to contain the buttons
-            frame_buttons = Frame(canvas, bg="white")
-            canvas.create_window((0,0), window=frame_buttons, anchor='nw')
-
-            # Add 9-by-5 buttons to the frame
-            rows = count 
-            columns = 1
-            buttons = [[Button() for j in range(columns)] for i in range(rows)]
-            
-            for i in range(0, rows):
-                #print(results[i])
-                if vol.count_documents({"startdate": {"$exists": True}, '_id': results[i]['_id']}) == 1 :
-                    #date_display = results[i]['startdate']+ '- ' + results[i]['enddate']
-                    date_display = results[i]['startdate'].strftime('%m/%d/%y') + ' - ' + results[i]['enddate'].strftime('%m/%d/%y')
-                elif isinstance(results[i]['date'], str):
-                    date_display = results[i]['date']
-                else:
-                    date_display = results[i]['date'].strftime('%m/%d/%y')
+                # Link a scrollbar to the canvas
+                vsb = Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
+                vsb.grid(row=0, column=1, sticky='ns')
+                canvas.configure(yscrollcommand=vsb.set)
 
 
-                for j in range(0, columns):
-                    buttons[i][j] = Button(frame_buttons, height = 10, width=10,  text= 'date: ' + date_display + '\n' + 
-                        'details: ' + results[i]['details'] + '\n' + 'hours: ' + str(results[i]['hours']),
-                        command = lambda i=i: make_entry_changes(vol, results[i], buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
-                    menu_button, search_keywords_button))
-                    buttons[i][j].grid(row=i, column=j, ipadx=300, ipady=50,pady=50)
+                # Create a frame to contain the buttons
+                frame_buttons = Frame(canvas, bg="white")
+                canvas.create_window((0,0), window=frame_buttons, anchor='nw')
 
-                #i +=1
+                # Add 9-by-5 buttons to the frame
+                rows = count 
+                columns = 1
+                buttons = [[Button() for j in range(columns)] for i in range(rows)]
+                
+                for i in range(0, rows):
+                    #print(results[i])
+                    if vol.count_documents({"startdate": {"$exists": True}, '_id': results[i]['_id']}) == 1 :
+                        #date_display = results[i]['startdate']+ '- ' + results[i]['enddate']
+                        date_display = results[i]['startdate'].strftime('%m/%d/%y') + ' - ' + results[i]['enddate'].strftime('%m/%d/%y')
+                    elif isinstance(results[i]['date'], str):
+                        date_display = results[i]['date']
+                    else:
+                        date_display = results[i]['date'].strftime('%m/%d/%y')
 
-                # Update buttonsframes idle tasks to let tkinter calculate buttons sizes
-            frame_buttons.update_idletasks()
 
-            # Resize the canvas frame to show exactly 5-by-5 buttons and the scrollbar
-            first5columns_width = sum([buttons[0][j].winfo_width() for j in range(0, columns)])
-            first5rows_height = sum([buttons[i][0].winfo_height() for i in range(0, rows)])
-            frame_canvas.config(width=buttons[0][j].winfo_width() + vsb.winfo_width(),
-                                    height=buttons[0][j].winfo_height())
+                    for j in range(0, columns):
+                        buttons[i][j] = Button(frame_buttons, height = 10, width=10,  text= 'date: ' + date_display + '\n' + 
+                            'details: ' + results[i]['details'] + '\n' + 'hours: ' + str(results[i]['hours']),
+                            command = lambda i=i: make_entry_changes(vol, results[i], buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
+                        menu_button, search_keywords_button))
+                        buttons[i][j].grid(row=i, column=j, ipadx=300, ipady=50,pady=50)
 
-            #configure(10,10)
+                    #i +=1
 
-            # Set the canvas scrolling region
-            canvas.config(scrollregion=canvas.bbox("all"))
+                    # Update buttonsframes idle tasks to let tkinter calculate buttons sizes
+                frame_buttons.update_idletasks()
 
-            search_keywords_button = Button(root, text = "Search using keywords instead", 
-                command = lambda: search_keywords(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
-                    menu_button, search_keywords_button))
-            search_keywords_button.grid(row=1, column=0, padx=10, pady=10)
+                # Resize the canvas frame to show exactly 5-by-5 buttons and the scrollbar
+                first5columns_width = sum([buttons[0][j].winfo_width() for j in range(0, columns)])
+                first5rows_height = sum([buttons[i][0].winfo_height() for i in range(0, rows)])
+                frame_canvas.config(width=buttons[0][j].winfo_width() + vsb.winfo_width(),
+                                        height=buttons[0][j].winfo_height())
 
-            menu_button = Button(root, text = "Menu", 
-                command = lambda: menu(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, menu_button, search_keywords_button))
-            menu_button.grid(row = 2, column = 0, padx=10, pady=10)
+                #configure(10,10)
+
+                # Set the canvas scrolling region
+                canvas.config(scrollregion=canvas.bbox("all"))
+
+                search_keywords_button = Button(root, text = "Search using keywords instead", 
+                    command = lambda: search_keywords(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
+                        menu_button, search_keywords_button))
+                search_keywords_button.grid(row=1, column=0, padx=10, pady=10)
+
+                menu_button = Button(root, text = "Menu", 
+                    command = lambda: menu(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, menu_button, search_keywords_button))
+                menu_button.grid(row = 2, column = 0, padx=10, pady=10)
 
            
             # create a canvas
@@ -886,55 +892,36 @@ def menu(collection, *widgets):
         command = lambda: view_log(vol, menu_label, add_record_1, view_2, frame1))
     view_2.grid(row=2, column=1)
 
-    configure(2, 1)
+
+    another_collection_button = Button(frame1, text = "Choose another collection",
+     command = lambda: view_which_log(menu_label, add_record_1, view_2, frame1, another_collection_button))
+    another_collection_button.grid(row=3, column=1, padx=50, pady=10)
+
+    configure(3, 1)
 
 def main():
 
     global root, test_label, client, db, vol
-    
 
     root = Tk()
     root.title("Activity Log")
     root.geometry("700x400")
 
-   # root['bg'] = 'white'
+    #root['bg'] = 'lavender blush'
 
-   # root.columnconfigure(0,weight=1)    #confiugures column 0 to stretch with a scaler of 1.
-   # root.rowconfigure(0,weight=1)
-
- 
     client = MongoClient('mongodb://localhost:27017') # connects to a specific port
+
     # open the database
     db = client["sheets"]
     
-   # while view_which_log() != None:
     view_which_log()
-   #     print(a)
-
-    # opens the collection that is in the database
-    #vol = db["volunteer"]
-   # menu()
-   # results = vol.find()
-    
-    #menu()
-    #test_label.pack()
 
     root.mainloop()
 
 # calls main
 main()
        
-#start = datetime(2016, 12, 20)
-#a = vol.find_one({'startdate': {'$gt': start}})
-#print(a)
-#display_results(a)
 
-# 5fe2adc955957e2ab04be289
-# 22/09/2017
-
-#print(len("04/09/2017 - 05/09/2017"))
-# 23
-# test(results)
 
 
 
