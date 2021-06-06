@@ -4,7 +4,6 @@ from tkinter import messagebox
 from tkinter import ttk
 from datetime import datetime
 import sys
-import globals
 
 # maybe do data visualization?
 
@@ -225,16 +224,9 @@ def types_of_changes(type_of_change, edited_entry, vol, result, *widgets):
     else:
         check_date(edited_entry[0])
         check_date(edited_entry[1])
-       # vol.update_one({'_id': result['_id']}, {'$set': {'startdate': edited_entry[0], 
-         #   'enddate': edited_entry[1]}})
-
         datetime_start = datetime.strptime(edited_entry[0], "%m/%d/%y")
         datetime_end = datetime.strptime(edited_entry[1], "%m/%d/%y")
         vol.update_one({'_id': result['_id']}, {'$set': {'startdate': datetime_start, 'enddate': datetime_end}})
-        #to_datetime(vol, [result])
-        #successful_message(vol, None, 2)
-
-
 
 """
 There are two purposes:
@@ -245,12 +237,14 @@ be asked to enter their hours again.
 spans over a day or multiple days by clicking one of the buttons.
 
 Input: 
+- vol
 - user_list: a list of the user's inputs so far (which in this case, would be the details and the hours)
 - hours: the user's input - ideally as an int, but will be checked if it is an integer
-- Any number of widgets from add_hours() to be destroyed 
+- *widgets
 
 Output: None
 
+Calls: one_day_option() or multiple_days_option()
 """
 
 def add_dates(vol, user_list, hours,*widgets):
@@ -269,16 +263,12 @@ def add_dates(vol, user_list, hours,*widgets):
     dates_text = Label(frame1, text = "Did this take place over the span of one day or multiple days?")
     dates_text.grid(row=0,column=1,padx=50,pady=10)
 
-    # first option the user can select 
     one_day_button = Button(frame1, text = "One day", 
         command = lambda: one_day_option(vol, user_list, False, dates_text, one_day_button, m_days_button, frame1))
-
     one_day_button.grid(row=1, column=1, padx=50,pady=50)
 
-    # second option the user can select 
     m_days_button = Button(frame1, text = "Multiple days", 
         command = lambda: multiple_days_option(vol, user_list, dates_text, one_day_button, m_days_button, frame1))
-
     m_days_button.grid(row=2, column=1, padx=50, pady=50)
 
     configure(2, 1)
@@ -306,28 +296,30 @@ There are two purposes.
 2. Allows the user to enter the day that the experience/activity took place on (as a string)
 
 Input: 
+- vol
 - user_list: a list of the user's inputs so far (in this case, the details and hours). It will not be used in the function
 itself, but will be used in the all_user_inputs()
+- edited: True or False
 - Any number of widgets to be destroyed
 
 Output: None
 
+Calls: all_user_inputs() or types_of_changes()
 """
-def one_day_option(vol, user_list, done, *widgets):
+def one_day_option(vol, user_list, edited, *widgets):
 
     destroy(*widgets)
 
     frame1 = create_frame(0,1)
     configure(2, 1)
 
-    # DATE CHANGED
     day_text = Label(frame1, text = "What day did this take place (eg. 12/25/2020) ")
     day_text.grid(row=0,column=1,padx=50,pady=10)
 
     day_entry = Entry(frame1) # textbox
     day_entry.grid(row=1,column=1,padx=50,pady=10)
 
-    if not done:
+    if not edited:
         submit_button = Button(frame1, text = "Submit", 
         command = lambda: all_user_inputs(vol, user_list, day_text, day_entry, submit_button, frame1, date = day_entry.get()))
         submit_button.grid(row=2, column=1, padx=50,pady=50)
@@ -337,24 +329,23 @@ def one_day_option(vol, user_list, done, *widgets):
         submit_button.grid(row=2, column=1, padx=50,pady=50)
 
 
-
-
-
 """
 There are two purposes.
 1. Destroys the widgets from add_dates()
 2. Allows the user to enter the start date and the end date that the experience/activity took place on (as a string)
 
 Input: 
+- vol
 - user_list: a list of the user's inputs so far (in this case, the details and hours). It will not be used in the function
 itself, but will be used in the all_user_inputs()
+- edited: True or False
 - Any number of widgets to be destroyed
 
 Output: None
 
+Calls: all_user_inputs() or types_of_changes()
 """
-
-def multiple_days_option(vol, user_list, done, *widgets):
+def multiple_days_option(vol, user_list, edited, *widgets):
 
     destroy(*widgets)
 
@@ -376,25 +367,18 @@ def multiple_days_option(vol, user_list, done, *widgets):
     end_day_entry = Entry(frame1)
     end_day_entry.grid(row=4, column=1, padx=50, pady=10)
 
-    if not done:
+    if not edited:
         submit_button = Button(frame1, text = "Submit", 
         command = lambda: all_user_inputs(vol, user_list, days_text, start_day_text, end_day_text, 
             start_day_entry, end_day_entry, submit_button, frame1,
             startdate = start_day_entry.get(), enddate = end_day_entry.get()))
-
-
         submit_button.grid(row=5, column=1, padx=50,pady=50)
 
     else:
-
-
         submit_button = Button(frame1, text = "Submit", 
         command = lambda: types_of_changes(4, [start_day_entry.get(), end_day_entry.get()], vol, user_list, days_text, start_day_text, end_day_text, 
             start_day_entry, end_day_entry, submit_button, frame1))
-
-
         submit_button.grid(row=5, column=1, padx=50,pady=50)
-
 
 """
 Checks if the date entered by the user is a valid date (valid day, month, and year).
@@ -403,19 +387,14 @@ Input: the date (as a string)
 Output: None
 
 """
-
 def check_date(date):
     try:
-        print(len(date.strip()))
         if len(date.strip()) == 8:
             check_date = datetime.strptime(date, "%m/%d/%y") 
-          
         else:
             raise ValueError
     except Exception as e:
-        print(e)
         messagebox.showerror("Date(s) Error", "Check that the date(s) you have entered are valid.")
-        #raise Exception
 
 """
 There are two purposes.
@@ -423,43 +402,36 @@ There are two purposes.
 2. The user is then presented with two buttons: one that exits the program and the other takes them back to the menu screen.
 
 Input: 
+- vol
 - The user list that contains the details, hour(s), and date(s) (note that all have been checked to be valid already)
+- type_of_success: 1 if it's a new entry being added successful, 2 if it's an entry being successfully edited
 - Any number of widgets to be destroyed (these widgets are either from one_day_option() or multiple_days_options())
 Output: None
 
+Calls: to_datetime() and menu()
 """
-
 def successful_message(vol, user_list, type_of_success, *widgets):
 
-    
     try:
-
         destroy(*widgets)
         frame1 = create_frame(0,1)
         frame2 = create_frame(1,1)
 
-        if type_of_success == 1:
-            if len(user_list) == 3: # date (2017-07-31T00:00:00.000+00:00), detail, hours
+        if type_of_success == 1: # new entry
+            if len(user_list) == 3: # one date 
                 vol_record = {"date": user_list[2], "details": user_list[0], "hours": user_list[1] }
-            else: # date ("02/08/2017 - 04/08/2017"), detail, hours, startdate, enddate
+            else:
                 vol_record = {"date": user_list[2] + " - " + user_list[3], "details": user_list[0], "hours": user_list[1]}
 
-   # vol_record = {"details"}
             vol.insert_one(vol_record)
             to_datetime(vol, [vol_record])
 
             success_message = Label(frame1, text = "The record has been successfully added to the database!")
             success_message.grid(row=0, column=1)
 
-        else:
-
+        else: # edited entry
             success_message = Label(frame1, text = "The record has been successfully edited!")
             success_message.grid(row=0, column=1)
-
-    # ['a', '1', '25/12/2020']
-    # ['a', '1', '25/12/2020', '01/01/2021']
-    # rental = {"member_renting": ("Saeed", "7806808181"), "movie_rented": movie_ids[1]}
-
 
         # exit option
         exit_button= Button(frame2, text = "Exit", command = lambda: sys.exit()) # if pressed, exits the program
@@ -475,29 +447,27 @@ def successful_message(vol, user_list, type_of_success, *widgets):
     except Exception as e:
         print(e)
 
-
 """
 There are two purposes.
 1. If the date(s) are valid (which will be checked in this function), the date(s) will be added to the user_list 
 (that contains the details and the hours)
 
-2. Once the date is determined to be valid, the record is added to the database. (**INCORPORATE)
+2. Once the date is determined to be valid, the record is added to the database (using successful_message())
 
-REMINDER: the details and the hours are valid (as they have been checked before)
+NOTE: the details and the hours are valid (as they have been checked before)
+
+Calls: check_date() and successful_message
 
 """
-
 def all_user_inputs(vol, user_list, *widgets, **days):
 
     try:
-
         # add date(s)
         for key, value in days.items():
-            if key == "date":
+            if key == "date": # one date
                 check_date(value)
                 user_list.append(value)
-                break
-
+                break # done checking, break out of for loop
             else: 
                 check_date(days["startdate"])
 
@@ -508,45 +478,27 @@ def all_user_inputs(vol, user_list, *widgets, **days):
 
                 if len(user_list) == 3: # already contains details, hours, and startdate
                     user_list.append(days["enddate"]) # if statement prevents enddate from being added again
-                
                 break
-
-
-           # destroy(*widgets)
-        print(user_list)
         successful_message(vol, user_list, 1, *widgets)
 
     except NameError as n:
-        print(n)
         messagebox.showerror("Dates Error", "Please enter a valid date.")
 
-   # except Exception:
-        # messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
-    #    return
-
     except Exception as e:
-        print(e)
         messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
-     #   return # exit the function
 
+"""
+Called if the user wants to create a new collection.
 
-    #return user_list
+Input: 
+-list of buttons from "previous screen"
+- *widgets
 
+Output: None
 
-def print_value(e):
-    print(e.get())
-
-def delete_test():
-    pass
-
-def add_test(user_list):
-    record = {"details": user_list[0]}
-    vol.insert(record)
-
-def modify_log():
-    pass
-
-def create_new_collection(year_buttons, *widgets): #DOO
+Calls: new_collection()
+"""
+def create_new_collection(year_buttons, *widgets): 
 
     for button in year_buttons:
         destroy(button)
@@ -558,34 +510,32 @@ def create_new_collection(year_buttons, *widgets): #DOO
     new_year_entry = Entry(root)
     new_year_entry.grid(row=2, column=1, padx=10, pady=10)
 
-    submit = Button(root, text = "Submit", command = lambda: new_collection(new_year_entry.get(), new_year, new_year_entry, submit))
+    submit = Button(root, text = "Submit", 
+        command = lambda: new_collection(new_year_entry.get(), new_year, new_year_entry, submit))
     submit.grid(row=3, column=1, padx=10, pady=10)
 
   
+"""
+NYC
 
+"""
 def new_collection(new_name, *widgets):
     destroy(*widgets)
     success_message = Label(root, text="A new collection has been added!")
     success_message.grid(row=1, column=1, padx=10, pady=10)
 
-
-
     ok_button = Button(root, text = "ok", command = lambda: view_which_log(success_message, ok_button))
     ok_button.grid(row=2, column=1, padx=10, pady=10)
 
-
 """
-**NEEDS TO BE CHANGED. CURRENTLY DISPLAYS ONE RECORD (AND OTHER CHANGES...SEE BELOW)
-
 The date(s), details of the experience/activity, and the hour(s) are displayed on the screen.
-The user can click on the PREVIOUS and NEXT buttons to look through their records. 
 
 Input: 
 - Any number of widgets to be destroyed (from menu())
-- skip_num: the record that will be displayed
 
 Output: None
 
+Calls: access_collection() or create_new_collection()
 """
 
 def view_which_log(*widgets):
@@ -595,16 +545,10 @@ def view_which_log(*widgets):
     frame1 = create_frame(0,1)
     frame2 = create_frame(1,1)
 
-   # frame1['bg'] = 'azure'
-
     choose_years = Label(frame1, text = "Which year would you like to look at?")
     choose_years.grid(row = 0, column =1)
 
-    # show the collections that are available 
-    row_num = 2;
-    col_names = ""
-
-    year_buttons = []
+    year_buttons = [] # keeps track of all the collection buttons
     button_num = 0
     for collection in db.list_collection_names():
         # command= lambda s=somevariable: printout(s)) 
@@ -614,21 +558,24 @@ def view_which_log(*widgets):
         year_buttons.append(b)
         button_num +=1
 
-
-
-    #display_cols = Label(root, text = col_names)
-    #display_cols.grid(row=row_num, column=2, padx=10, pady=10)
-        
-
-    #collection_input = Entry(root)
-    #collection_input.grid(row=row_num+1, column=2, padx=10, pady=10)
-   
-
     new_year = Button(frame2, text = "Add new year instead", command = lambda: create_new_collection(year_buttons, choose_years, new_year, frame1, frame2))
     new_year.grid(row=1, column=button_num, padx=10, pady=10)
 
     configure(1, button_num)
 
+
+"""
+Now that a collection has been selected, the user will access that collection and continue with the menu options.
+
+Input:
+- list of buttons to be destroyed
+- collection_name
+- *widgets
+
+Output: None
+
+Calls: menu()
+"""
 def access_collection(button_list, collection_name, *widgets):
 
     for button in button_list:
@@ -637,10 +584,12 @@ def access_collection(button_list, collection_name, *widgets):
     destroy(*widgets)
     menu(collection_name)
     
+"""
+Used to help with the "scrolling feature" when viewing the activity log
+"""
 def onFrameConfigure(canvas):
     '''Reset the scroll region to encompass the inner frame'''
     canvas.configure(scrollregion=canvas.bbox("all"))
-
 
 def no_entries(vol, *widgets):
     destroy(*widgets)
@@ -648,37 +597,17 @@ def no_entries(vol, *widgets):
     no_logs.grid(row=1, column=1)
 
 
-
 def view_log(vol, keyword=None, *widgets, skip_num=0):
 
-    # otherwise !label
-    
     destroy(*widgets)
-    destroy(menu_label)
 
     if keyword == None:
         pass
-    elif not isinstance(keyword,str):
+    if not isinstance(keyword,str):
         search_keywords(vol, *widgets)
-
-    
-    
-
-   # frame1 = create_frame(0,1)
-    #frame2 = create_frame(1,1)
-
-
-
-
-    # **ADD PREVIOUS BUTTON [DONE]
-    # ** ADD SEARCH KEYWORDS (maybe in different function?)
     
     try:
-        #results = vol.find().skip(skip_num).limit(1)
-
         if isinstance(keyword, str) or keyword == None:
-
-
             if isinstance(keyword, str):
                 results = vol.find({'details': {'$regex': keyword, '$options': 'i'}}).skip(skip_num).limit(1)
                 count = vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}})
@@ -687,25 +616,12 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
                 results = vol.find().skip(skip_num).limit(1)
                 count = vol.estimated_document_count()
 
-            row_num = 0
-
             if count == 0:
                 print('heres')
                 no_entries(vol)
 
-            # ---------------------------
-            # creating a scrollbar...
-
-            # create a main frame
-           # main_frame = Frame(root)
-           # main_frame.grid(row=0, column=2)
-           # frame1.grid(sticky = 'news')
-
-          #  frame_canvas = Frame(frame1)
-          #  frame_canvas.grid(row=0, column=1)
-           # frame_canvas.grid_rowconfigure(0, weight=1)
-           # frame_canvas.grid_columnconfigure(1, weight=1)
             else:
+                row_num = 0
                 frame_main = Frame(root, bg="gray")
                 frame_main.grid(sticky='news')
 
@@ -753,13 +669,11 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
                     for j in range(0, columns):
                         buttons[i][j] = Button(frame_buttons, height = 10, width=10,  text= 'date: ' + date_display + '\n' + 
                             'details: ' + results[i]['details'] + '\n' + 'hours: ' + str(results[i]['hours']),
-                            command = lambda i=i: make_entry_changes(vol, results[i], buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
+                            command = lambda i=i: ask_entry_changes(vol, results[i], buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
                         menu_button, search_keywords_button))
                         buttons[i][j].grid(row=i, column=j, ipadx=300, ipady=50,pady=50)
 
-                    #i +=1
-
-                    # Update buttonsframes idle tasks to let tkinter calculate buttons sizes
+                # Update buttonsframes idle tasks to let tkinter calculate buttons sizes
                 frame_buttons.update_idletasks()
 
                 # Resize the canvas frame to show exactly 5-by-5 buttons and the scrollbar
@@ -767,8 +681,6 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
                 first5rows_height = sum([buttons[i][0].winfo_height() for i in range(0, rows)])
                 frame_canvas.config(width=buttons[0][j].winfo_width() + vsb.winfo_width(),
                                         height=buttons[0][j].winfo_height())
-
-                #configure(10,10)
 
                 # Set the canvas scrolling region
                 canvas.config(scrollregion=canvas.bbox("all"))
@@ -782,54 +694,22 @@ def view_log(vol, keyword=None, *widgets, skip_num=0):
                     command = lambda: menu(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, menu_button, search_keywords_button))
                 menu_button.grid(row = 2, column = 0, padx=10, pady=10)
 
-           
-            # create a canvas
-           # canvas_1 = Canvas(frame1)
-            #canvas_1.grid(row=2, column=0, pady = (5,0), sticky = 'nw')
-            #Grid.rowconfigure(canvas_1, 0, weight=1)
-            #Grid.columnconfigure(canvas_1, 0, weight =1)
-
-
-            # add scrollbar to the canvas
-           # v_scrollbar = ttk.Scrollbar(frame1, orient = VERTICAL, command = canvas_1.yview)
-            #v_scrollbar.grid(row=0, column=15)
-
-            # configure the canvas
-            #canvas_1.configure(yscrollcommand = v_scrollbar.set)
-            #canvas_1.bind('<Configure>', lambda e: canvas_1.configure(scrollregion = canvas_1.bbox("all")))
-
-            # Create ANOTHER Frame INSIDE the Canvas
-            #frame_2 = Frame(canvas_1)
-
-            # Add that New frame To a Window In The Canvas
-            #canvas_1.create_window((0,0), window=frame_2, anchor="nw")
-
-            # -----------------------------
-            
-           # for result in results:
-               # print(result)
-
-               # info_label = Label(frame_canvas, text = date_display + '\n' + result['details'] + '\n' + str(result['hours']))
-                #date = Label(root, text = result['date'] if isinstance(result['date'], str) else result['date'].strftime("%d/%m/%Y"))
- 
-            """
-
-            #print("Count is",count)
- 
-    """
-    except NameError as f:
-        print(f)
-
-    except ValueError as v: # there are no "previous" posts to display (the user is currently viewing the first post)
-        # widgets have already been destroyed when the button is clicked (does not need to be added again)
-        # the default value of skip_num is 0
-       # view_log() 
-        print(v)
     except Exception as e:
         print(e)
 
+"""
+Asks the user what part of their entry they would like to change.
 
-def make_entry_changes(vol, result, *widgets):
+Input:
+- vol
+- result: (eg. {'_id': ObjectId('60b4418688db9bce7b378c09'), 'date': datetime.datetime(2020, 12, 27, 0, 0), 'details': 'aa\n', 'hours': '1'})
+- *widgets
+
+Output: None
+
+Calls: add_details() or add_hours() or make_date_changes() or view_log()
+"""
+def ask_entry_changes(vol, result, *widgets):
 
     destroy(*widgets)
 
@@ -852,19 +732,38 @@ def make_entry_changes(vol, result, *widgets):
         command = lambda: view_log(vol, None, where_to_edit, details_button, hours_button, dates_button, go_back_button))
     go_back_button.grid(row=3, column=1, padx=10, pady=10)
 
+
+"""
+Takes the user to the appropiate method depending on if they want to edit one date or two dates (start and end date)
+
+Input:
+- vol
+- result (all the details)
+- *widgets
+
+Output: None
+
+Calls: one_day_option() or multiple_days_option()
+"""
 def make_date_changes(vol, result, *widgets):
-    #results = vol.find({"startdate": {"$exists": True}, '_id': result['_id']})
     count = vol.count_documents({"startdate": {"$exists": True}, '_id': result['_id']})
-    if count == 0:
+    if count == 0: # one date
         one_day_option(vol, result, True, *widgets)
     else:
         multiple_days_option(vol, result, True, *widgets)
 
-    
 """
 Displays the menu where there are two buttons for the user to select from:
 1. The user can add a new log record (they have a new experience/activity to add)
 2. The user can view their current log (the records that they have at the moment)
+
+Input: 
+- collection (which would be the name of the collection if the menu is accessed for the first time, otherwise this is vol)
+- *widgets
+
+Output: None
+
+Calls: add_details() or view_log() or view_which_log()
 """
 def menu(collection, *widgets):
 
@@ -877,28 +776,27 @@ def menu(collection, *widgets):
 
     frame1 = create_frame(0,1)
     
-    global menu_label, add_record_1, view_2
+    global menu_label, add_record_1, view_act_log
     menu_label = Label(frame1, text="MENU")
     menu_label.grid(row=0,column=1,padx=50,pady=10)    
 
-    add_record_1 = Button(frame1, text = "Add a new log record", padx = 50, pady=10, command=lambda: add_details(vol, False, None, menu_label, add_record_1, view_2, frame1))
-
-
+    add_record_1 = Button(frame1, text = "Add a new log record", padx = 50, pady=10, 
+        command=lambda: add_details(vol, False, None, menu_label, add_record_1, view_act_log, frame1))
     add_record_1.grid(row=1, column=1)
 
-    #search_keywords()
-
-    view_2 = Button(frame1, text = "View activity log", padx = 50, pady=10, 
-        command = lambda: view_log(vol, menu_label, add_record_1, view_2, frame1))
-    view_2.grid(row=2, column=1)
-
+    view_act_log = Button(frame1, text = "View activity log", padx = 50, pady=10, 
+        command = lambda: view_log(vol, None, menu_label, add_record_1, view_act_log, frame1))
+    view_act_log.grid(row=2, column=1)
 
     another_collection_button = Button(frame1, text = "Choose another collection",
-     command = lambda: view_which_log(menu_label, add_record_1, view_2, frame1, another_collection_button))
+     command = lambda: view_which_log(menu_label, add_record_1, view_act_log, frame1, another_collection_button))
     another_collection_button.grid(row=3, column=1, padx=50, pady=10)
 
     configure(3, 1)
 
+"""
+MAIN
+"""
 def main():
 
     global root, test_label, client, db, vol
@@ -906,8 +804,6 @@ def main():
     root = Tk()
     root.title("Activity Log")
     root.geometry("700x400")
-
-    #root['bg'] = 'lavender blush'
 
     client = MongoClient('mongodb://localhost:27017') # connects to a specific port
 
@@ -921,8 +817,3 @@ def main():
 # calls main
 main()
        
-
-
-
-
-#https://stackoverflow.com/questions/10865116/tkinter-creating-buttons-in-for-loop-passing-command-arguments
