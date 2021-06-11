@@ -499,25 +499,29 @@ Output: None
 
 Calls: adds_new_collection()
 """
-def create_new_collection(year_buttons, *widgets): 
+def create_new_collection(list_buttons, *widgets): 
 
-    for button in year_buttons:
+    for button in list_buttons:
         destroy(button)
 
+    frame1 = create_frame(1,1)
+
     destroy(*widgets)
-    new_year = Label(root, text = "What would you like the new year to be called?")
-    new_year.grid(row=1, column=1, padx=10, pady=10)
+    new_col = Label(frame1, text = "What would you like the new collection to be called?")
+    new_col.grid(row=1, column=1, padx=10, pady=10)
 
-    new_year_entry = Entry(root)
-    new_year_entry.grid(row=2, column=1, padx=10, pady=10)
+    new_col_entry = Entry(frame1)
+    new_col_entry.grid(row=2, column=1, padx=10, pady=10)
 
-    submit = Button(root, text = "Submit", 
-        command = lambda: adds_new_collection(new_year_entry.get(), new_year, new_year_entry, submit))
+    submit = Button(frame1, text = "Submit", 
+        command = lambda: adds_new_collection(new_col_entry.get(), new_col, new_col_entry, submit, frame1))
     submit.grid(row=3, column=1, padx=10, pady=10)
+
+    configure(3, 1)
 
   
 """
-Adds a new collection.
+Adds the new collection.
 
 Input:
 - new_name: name of the new collection
@@ -530,7 +534,10 @@ Calls: view_which_log()
 """
 def adds_new_collection(new_name, *widgets):
     destroy(*widgets)
-    success_message = Label(root, text="A new collection has been added!")
+
+    frame1 = create_frame(1,1)
+
+    success_message = Label(frame1, text="A new collection has been added!")
     success_message.grid(row=1, column=1, padx=10, pady=10)
 
     col = db[new_name]
@@ -539,11 +546,11 @@ def adds_new_collection(new_name, *widgets):
     col.insert_one({"New": "new"})
     col.delete_one({"New": "new"})
 
-    ok_button = Button(root, text = "ok", command = lambda: view_which_log(success_message, ok_button))
+    ok_button = Button(frame1, text = "Ok", command = lambda: view_which_log(success_message, ok_button, frame1))
     ok_button.grid(row=2, column=1, padx=10, pady=10)
 
 def delete_collection(collection, *widgets):
-    answer = messagebox.askyesno('Delete collection', 'Are you sure you want to delete this collection?')
+    answer = messagebox.askyesno('Delete Collection', 'Are you sure you want to delete this collection?')
     if answer == True:
         collection.drop()
         view_which_log(*widgets)
@@ -566,21 +573,21 @@ def view_which_log(*widgets):
     frame1 = create_frame(0,1)
     frame2 = create_frame(1,1)
 
-    choose_years = Label(frame1, text = "Which year would you like to look at?")
-    choose_years.grid(row = 0, column =1)
+    choose_col = Label(frame1, text = "Which collection would you like to look at?")
+    choose_col.grid(row = 0, column =1)
 
-    year_buttons = [] # keeps track of all the collection buttons
+    col_buttons = [] # keeps track of all the collection buttons
     button_num = 0
     for collection in db.list_collection_names():
         # command= lambda s=somevariable: printout(s)) 
         # https://stackoverflow.com/questions/49082862/create-multiple-tkinter-button-with-different-command-but-external-variable
-        b = Button(frame2, text = collection, command = lambda collection_name = collection: access_collection(year_buttons, collection_name, choose_years, new_year, frame1, frame2))
+        b = Button(frame2, text = collection, command = lambda collection_name = collection: access_collection(col_buttons, collection_name, choose_col, new_col, frame1, frame2))
         b.grid(row=1, column=button_num, padx=10, pady=10)
-        year_buttons.append(b)
+        col_buttons.append(b)
         button_num +=1
 
-    new_year = Button(frame2, text = "Add new year instead", command = lambda: create_new_collection(year_buttons, choose_years, new_year, frame1, frame2))
-    new_year.grid(row=1, column=button_num, padx=10, pady=10)
+    new_col = Button(frame2, text = "Add new collection instead", command = lambda: create_new_collection(col_buttons, choose_col, new_col, frame1, frame2))
+    new_col.grid(row=1, column=button_num, padx=10, pady=10)
 
     configure(1, button_num)
 
@@ -823,13 +830,13 @@ def menu(collection, *widgets):
     menu_label = Label(frame1, text="MENU")
     menu_label.grid(row=0,column=1,padx=50,pady=10)    
 
-    add_record_1 = Button(frame1, text = "Add a new log record", padx = 50, pady=10, 
+    add_record_1 = Button(frame1, text = "Add a new log record",
         command=lambda: add_details(vol, False, None, menu_label, add_record_1, view_act_log, frame1))
-    add_record_1.grid(row=1, column=1)
+    add_record_1.grid(row=1, column=1, padx = 50, pady=10)
 
-    view_act_log = Button(frame1, text = "View activity log", padx = 50, pady=10, 
+    view_act_log = Button(frame1, text = "View activity log", 
         command = lambda: view_log(vol, False,None, menu_label, add_record_1, view_act_log, frame1))
-    view_act_log.grid(row=2, column=1)
+    view_act_log.grid(row=2, column=1, padx = 50, pady=10)
 
     another_collection_button = Button(frame1, text = "Choose another collection",
      command = lambda: view_which_log(menu_label, add_record_1, view_act_log, frame1, another_collection_button))
@@ -839,7 +846,7 @@ def menu(collection, *widgets):
         command = lambda: delete_collection(vol, menu_label, add_record_1, view_act_log, frame1, another_collection_button, delete_collection_button))
     delete_collection_button.grid(row=4, column=1, padx=50, pady=10)
 
-    configure(3, 1)
+    configure(4, 1)
 
 """
 MAIN
@@ -858,9 +865,7 @@ def main():
     db = client["sheets"]
     
     view_which_log()
-
     root.mainloop()
 
-# calls main
 main()
        
