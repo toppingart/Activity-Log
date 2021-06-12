@@ -645,6 +645,7 @@ def no_entries(vol, search, *widgets):
 
     configure(2,1)
 
+
 """
 Allows the user to see the entries displayed, and they are able to scroll through them and make edits, if necessary.
 
@@ -665,7 +666,11 @@ def view_log(vol, search, keyword=None, *widgets):
     # if keyword is None and we want to allow the user to search
     if not isinstance(keyword,str) and search == True:
         search_keywords(vol, *widgets)
-    
+
+    # user has searched but no search results popped up
+    elif search == True and vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}}) == 0:
+        no_entries(vol, search)
+
     try:
         # if we don't want searching (or if the user has already searched before), then go ahead and display the results
         if not search:
@@ -751,8 +756,25 @@ def view_log(vol, search, keyword=None, *widgets):
                     command = lambda: menu(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, menu_button, search_keywords_button))
                 menu_button.grid(row = 2, column = 0, padx=10, pady=10)
 
+                global var1 
+                var1 = IntVar()
+                sort_by_date_cb = Checkbutton(root, text= "Sort by Date", variable = var1, 
+                    onvalue = 1, offvalue=0, command = print_test)
+                sort_by_date_cb.grid(row=3, column=0)
+
+                sort_by_hours_cb = Checkbutton(root, text= "Sort by Hours")
+                sort_by_hours_cb.grid(row=4, column=0)
+
     except Exception as e:
         print(e)
+
+def filter_by_date(results, *widgets):
+    if var1.get() == 1:
+        results.sort('date', pymongo.DESCENDING)
+        return results
+
+def print_test():
+    print(var1.get())
 
 """
 Asks the user what part of their entry they would like to change.
