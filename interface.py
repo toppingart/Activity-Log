@@ -685,7 +685,12 @@ def view_log(vol, search, keyword=None, *widgets):
             if count == 0: # no entries
                 no_entries(vol, search)
 
+
+
             else: # 1 or more entries
+
+                results = results.sort([("date", 1), ("startdate", 1)])
+
                 row_num = 0
                 frame_main = Frame(root, bg="gray")
                 frame_main.grid(sticky='news')
@@ -756,15 +761,6 @@ def view_log(vol, search, keyword=None, *widgets):
                     command = lambda: menu(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, menu_button, search_keywords_button))
                 menu_button.grid(row = 2, column = 0, padx=10, pady=10)
 
-                global var1 
-                var1 = IntVar()
-                sort_by_date_cb = Checkbutton(root, text= "Sort by Date", variable = var1, 
-                    onvalue = 1, offvalue=0, command = print_test)
-                sort_by_date_cb.grid(row=3, column=0)
-
-                sort_by_hours_cb = Checkbutton(root, text= "Sort by Hours")
-                sort_by_hours_cb.grid(row=4, column=0)
-
     except Exception as e:
         print(e)
 
@@ -791,24 +787,45 @@ def ask_entry_changes(vol, result, keyword, *widgets):
 
     destroy(*widgets)
 
-    where_to_edit = Label(text="What part would you like to change?")
+    frame1 = create_frame(0,1)
+    frame2 = create_frame(1,1)
+
+    where_to_edit = Label(frame1, text="What part would you like to change?")
     where_to_edit.grid(row=1, column=1, padx=10, pady=10)
 
-    details_button = Button(root, text = "Details", command = lambda: add_details(vol, True, result, 
-        where_to_edit, details_button, hours_button, dates_button, go_back_button))
+    details_button = Button(frame1, text = "Details", command = lambda: add_details(vol, True, result, 
+        where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
     details_button.grid(row=2, column=0, padx=10, pady=10)
 
-    hours_button = Button(root, text = "Hours", command = lambda: add_hours(vol, result, True, 
-        where_to_edit, details_button, hours_button, dates_button, go_back_button))
+    hours_button = Button(frame1, text = "Hours", command = lambda: add_hours(vol, result, True, 
+        where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
     hours_button.grid(row=2, column=1, padx=10, pady=10)
 
-    dates_button = Button(root, text = "Date(s)", command = lambda: make_date_changes(vol, result,
-        where_to_edit, details_button, hours_button, dates_button, go_back_button))
+    dates_button = Button(frame1, text = "Date(s)", command = lambda: make_date_changes(vol, result,
+        where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
     dates_button.grid(row=2, column=2, padx=10, pady=10)
 
-    go_back_button = Button(root, text = "Go back", 
-        command = lambda: view_log(vol, False, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button))
+    go_back_button = Button(frame1, text = "Go back", 
+        command = lambda: view_log(vol, False, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
     go_back_button.grid(row=3, column=1, padx=10, pady=10)
+
+    additional = Button(frame2, text = "View Additional Notes", 
+        command = lambda: view_additional_notes(vol, result, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2))
+    additional.grid(row=1, column=1)
+
+
+def view_additional_notes(vol, result, keyword, *widgets):
+    destroy(*widgets)
+    frame1 = create_frame(1,1)
+    additional_notes = Label(frame1, text = "Additional notes:\n\n " + result['others'])
+    additional_notes.grid(row=1, column=1)
+
+    go_back_button = Button(frame1, text = "Go back", 
+        command = lambda: ask_entry_changes(vol, result, keyword, frame1, additional_notes, go_back_button))
+    go_back_button.grid(row=3, column=1, padx=10, pady=10)
+
+
+
 
 
 """
