@@ -123,14 +123,16 @@ def add_details(vol, edited, details, *widgets):
     if not edited:
 
         go_back_button = Button(frame3, text = "Go back", 
-            command = lambda: menu(vol, details_text, details_entry, submit_button, frame1))
+            command = lambda: menu(vol, details_text, details_entry, submit_button, frame1, frame2, frame3))
         go_back_button.grid(row=1, column=1, padx=10, pady=10)
 
         submit_button = Button(frame3, text = "Submit All", 
-            command = lambda: add_hours(vol, details_entry.get('1.0', 'end'), others_entry.get('1.0', 'end'), False, details_text, details_entry, submit_button, frame1, frame2, frame3))
+           command = lambda: add_hours(vol, details_entry.get('1.0', 'end'), others_entry.get('1.0', 'end'), False, details_text, details_entry, submit_button, frame1, frame2, frame3))
         submit_button.grid(row=1, column=2, padx=10,pady=10)
 
     else: # if the user is making edits to their entry
+        details_entry.insert(INSERT, details['details'])
+        others_entry.insert(INSERT, details['others'])
         submit_button = Button(frame3, text = "Submit All", 
             command = lambda: types_of_changes(1, details_entry.get('1.0', 'end'), others_entry.get('1.0', 'end'), vol, details, details_text, details_entry, submit_button, frame1, frame2, frame3))
         submit_button.grid(row=1, column=1, padx=10,pady=10)
@@ -258,7 +260,9 @@ def add_dates(vol, user_list, hours,*widgets):
         return # exits the function (so that the user can enter the number of hours again)
 
     destroy(*widgets)
-    user_list.append(int(hours)) # if hours is an int (is valid), it is added to the list of user inputs
+
+    if isinstance(user_list, list):
+        user_list.append(int(hours)) # if hours is an int (is valid), it is added to the list of user inputs
 
     frame1 = create_frame(0,1)
   
@@ -270,10 +274,11 @@ def add_dates(vol, user_list, hours,*widgets):
     one_day_button.grid(row=1, column=1, padx=50,pady=50)
 
     m_days_button = Button(frame1, text = "Multiple days", 
-        command = lambda: multiple_days_option(vol, user_list, dates_text, one_day_button, m_days_button, frame1))
+        command = lambda: multiple_days_option(vol, user_list, False, dates_text, one_day_button, m_days_button, frame1))
     m_days_button.grid(row=2, column=1, padx=50, pady=50)
 
-    configure(2, 1)
+
+    configure(3, 1)
 
 
 def configure(row, column):
@@ -322,12 +327,20 @@ def one_day_option(vol, user_list, edited, *widgets):
 
     if not edited:
         submit_button = Button(frame1, text = "Submit", 
-        command = lambda: all_user_inputs(vol, user_list, day_text, day_entry, submit_button, frame1, date = day_entry.get()))
+        command = lambda: all_user_inputs(vol, user_list, day_text, day_entry, submit_button, frame1, go_back_button, date = day_entry.get()))
         submit_button.grid(row=2, column=1, padx=50,pady=50)
+
+        go_back_button = Button(frame1, text = "Go back", 
+        command = lambda: add_dates(vol, user_list, user_list[2], day_text, day_entry, submit_button, frame1, go_back_button))
     else:
         submit_button = Button(frame1, text = "Submit", 
-        command = lambda: types_of_changes(3, day_entry.get(), None, vol, user_list, day_text, day_entry, submit_button, frame1))
+        command = lambda: types_of_changes(3, day_entry.get(), None, vol, user_list, day_text, day_entry, submit_button, frame1, go_back_button))
         submit_button.grid(row=2, column=1, padx=50,pady=50)
+
+        go_back_button = Button(frame1, text = "Go back", 
+        command = lambda: add_dates(vol, user_list, user_list['hours'], day_text, day_entry, submit_button, frame1, go_back_button))
+
+    go_back_button.grid(row=3, column=1, padx=10, pady=10)
 
 
 """
@@ -370,15 +383,19 @@ def multiple_days_option(vol, user_list, edited, *widgets):
     if not edited:
         submit_button = Button(frame1, text = "Submit", 
         command = lambda: all_user_inputs(vol, user_list, days_text, start_day_text, end_day_text, 
-            start_day_entry, end_day_entry, submit_button, frame1,
+            start_day_entry, end_day_entry, submit_button, frame1, go_back_button,
             startdate = start_day_entry.get(), enddate = end_day_entry.get()))
         submit_button.grid(row=5, column=1, padx=50,pady=50)
 
     else:
         submit_button = Button(frame1, text = "Submit", 
         command = lambda: types_of_changes(4, [start_day_entry.get(), end_day_entry.get()], None, vol, user_list, days_text, start_day_text, end_day_text, 
-            start_day_entry, end_day_entry, submit_button, frame1))
+            start_day_entry, end_day_entry, submit_button, frame1, go_back_button))
         submit_button.grid(row=5, column=1, padx=50,pady=50)
+
+    go_back_button = Button(frame1, text = "Go back", 
+        command = lambda: add_dates(vol, user_list, user_list[2], start_day_entry, end_day_entry, submit_button, frame1, go_back_button))
+    go_back_button.grid(row=6, column=1, padx=10, pady=10)
 
 """
 Checks if the date entered by the user is a valid date (valid day, month, and year).
@@ -824,9 +841,7 @@ def view_additional_notes(vol, result, keyword, *widgets):
         command = lambda: ask_entry_changes(vol, result, keyword, frame1, additional_notes, go_back_button))
     go_back_button.grid(row=3, column=1, padx=10, pady=10)
 
-
-
-
+    configure(3, 1)
 
 """
 Takes the user to the appropiate method depending on if they want to edit one date or two dates (start and end date)
