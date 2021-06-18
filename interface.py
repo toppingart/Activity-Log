@@ -72,16 +72,15 @@ def to_datetime(vol, results):
 
     for result in results:
         date = result['date']
-
         if isinstance(date,str) and len(date.strip()) == 8:
             #12/02/20
             datetime_obj = datetime.strptime(date, "%m/%d/%y")
             vol.update_one({'_id': result['_id']}, {'$set': {'date': datetime_obj}})
 
-        elif isinstance(date,str) and len(date.strip()) == 17:
-            # 12/01/20-12/02/20
+        elif isinstance(date,str) and len(date.strip()) == 19:
+            # 12/01/20 - 12/02/20
             start_date = result['date'][:8]
-            end_date = result['date'][9:]
+            end_date = result['date'][11:]
             start_datetime = datetime.strptime(start_date, "%m/%d/%y")
             end_datetime = datetime.strptime(end_date, "%m/%d/%y")
             vol.update_one({'_id': result['_id']}, {'$set': {'startdate': start_datetime}})
@@ -487,12 +486,13 @@ def all_user_inputs(vol, user_list, *widgets, **days):
             else: 
                 check_date(days["startdate"])
 
-                if len(user_list) == 2: # already contains the details, hours
+                #['ad\n', '\n', 5]
+                if len(user_list) == 3: # already contains the details, others, hours
                     user_list.append(days["startdate"]) # if statement prevents startdate from being added again
 
                 check_date(days["enddate"])
 
-                if len(user_list) == 3: # already contains details, hours, and startdate
+                if len(user_list) == 4: # already contains details, others, hours, and startdate
                     user_list.append(days["enddate"]) # if statement prevents enddate from being added again
                 break
 
