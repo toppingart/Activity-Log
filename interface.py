@@ -600,7 +600,12 @@ def view_which_log(*widgets):
     col_buttons = [] # keeps track of all the collection buttons
     button_num = 0
     row_num = 1
-    for collection in db.list_collection_names():
+
+    collection_list = list(db.list_collection_names())
+    collection_list.sort()
+
+    for collection in collection_list:
+      
         # command= lambda s=somevariable: printout(s)) 
         # https://stackoverflow.com/questions/49082862/create-multiple-tkinter-button-with-different-command-but-external-variable
         b = Button(frame2, text = collection, 
@@ -613,6 +618,7 @@ def view_which_log(*widgets):
             row_num +=1
             button_num = 0
 
+  
     new_col = Button(frame3, text = "Add new collection instead", command = lambda: create_new_collection(col_buttons, choose_col, new_col, frame1, frame2, frame3))
     new_col.grid(row=row_num+1, column=1, padx=10, pady=10)
 
@@ -736,6 +742,13 @@ def view_log(vol, search, keyword=None, *widgets):
                 # Create a frame to contain the buttons
                 frame_buttons = Frame(canvas, bg="pink")
                 canvas.create_window((0,0), window=frame_buttons, anchor='nw')
+
+                # allows you to use arrow keys
+                canvas.bind("<Up>",    lambda event: canvas.yview_scroll(-1, "units"))
+                canvas.bind("<Down>",  lambda event: canvas.yview_scroll( 1, "units"))
+
+                canvas.focus_set()
+                canvas.bind("<1>", lambda event: self.canvas.focus_set())
 
                 # Add 9-by-5 buttons to the frame
                 rows = count 
@@ -924,7 +937,7 @@ def main():
     current_year = today.strftime("%Y")
 
     # open the database (depends on year)
-    db = client["sheets"]
+    db = client["activities"]
     
     # starts off by making the user select a log (or collection) to view
     view_which_log()
