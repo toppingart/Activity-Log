@@ -4,7 +4,7 @@ from tkinter import messagebox
 from tkinter import ttk
 from datetime import datetime, date
 import sys
-
+from tkinter.font import BOLD
 """
 The user enters one or more keywords to narrow down the results (when looking for a specific record).
 
@@ -57,8 +57,9 @@ def search_with_input(vol, entry, *widgets):
    
     # case insensitive is allowed
     results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
+    
 
-    view_log(vol, True, keyword, *widgets)
+    view_log(vol, False, keyword, *widgets)
 
 """
 Used to change the date (as a string) to a datetime object.
@@ -898,7 +899,7 @@ def menu(collection, *widgets):
     frame1 = create_frame(0,1)
     
     global menu_label, add_record_1, view_act_log
-    menu_label = Label(frame1, text="MENU")
+    menu_label = Label(frame1, text="MENU", font="Helvetica 18 bold")
     menu_label.grid(row=0,column=1,padx=50,pady=10)    
 
     add_record_1 = Button(frame1, text = "Add a new log record",
