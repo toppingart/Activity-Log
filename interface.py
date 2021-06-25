@@ -5,6 +5,7 @@ from tkinter import ttk
 from datetime import datetime, date
 import sys
 from tkinter.font import BOLD
+from PIL import Image, ImageTk
 """
 The user enters one or more keywords to narrow down the results (when looking for a specific record).
 
@@ -121,7 +122,6 @@ def add_details(vol, edited, details, *widgets):
     configure(3, 1)
 
     if not edited:
-
         go_back_button = Button(frame3, text = "Go back", 
             command = lambda: menu(vol, details_text, details_entry, submit_button, frame1, frame2, frame3))
         go_back_button.grid(row=1, column=1, padx=10, pady=10)
@@ -595,6 +595,7 @@ def view_which_log(*widgets):
     frame3 = create_frame(2,1)
 
 
+
     choose_col = Label(frame1, text = "Which collection would you like to look at?")
     choose_col.grid(row = 0, column =1)
 
@@ -615,7 +616,7 @@ def view_which_log(*widgets):
         col_buttons.append(b)
         button_num +=1
 
-        if button_num % 5 == 0:
+        if button_num % 10 == 0:
             row_num +=1
             button_num = 0
 
@@ -741,7 +742,7 @@ def view_log(vol, search, keyword=None, *widgets):
                 canvas.configure(yscrollcommand=vsb.set)
 
                 # Create a frame to contain the buttons
-                frame_buttons = Frame(canvas, bg="pink")
+                frame_buttons = Frame(canvas, bg="light blue")
                 canvas.create_window((0,0), window=frame_buttons, anchor='nw')
 
                 # allows you to use arrow keys
@@ -764,8 +765,10 @@ def view_log(vol, search, keyword=None, *widgets):
                     else:
                         date_display = results[i]['date'].strftime('%m/%d/%y')
 
+                    #photo=ImageTk.PhotoImage(file="paper.png")
+                    #canvas.create_image(10,10,image=photo)
                     for j in range(0, columns):
-                        buttons[i][j] = Button(frame_buttons, height = 10, width=10,  text= 'date: ' + date_display + '\n' + 
+                        buttons[i][j] = Button(frame_buttons, bg = 'white', fg='black', font="Helvetica 9", height = 10, width=10, text= 'date: ' + date_display + '\n' + 
                             'details: ' + results[i]['details'] + '\n' + 'hours: ' + str(results[i]['hours']),
                             command = lambda i=i: ask_entry_changes(vol, results[i], keyword, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
                         menu_button, search_keywords_button))
@@ -929,7 +932,17 @@ def main():
 
     root = Tk()
     root.title("Activity Log")
-    root.geometry("700x400")
+    root.geometry("720x400")
+
+
+    bg=ImageTk.PhotoImage(file="394901.png")
+    #photoimage = bg.subsample(3, 3) 
+    # Create a canvas
+    my_canvas = Canvas(root, width=800, height=500)
+    my_canvas.grid(row=0, column=1)
+
+    # Set image in canvas
+    my_canvas.create_image(0,0, image=bg, anchor="nw")
 
     client = MongoClient('mongodb://localhost:27017') # connects to a specific port
 
