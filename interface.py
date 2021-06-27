@@ -109,9 +109,9 @@ def add_details(vol, edited, details, *widgets):
     frame2 = create_frame(0,1)
     frame3 = create_frame(1,1)
 
-    details_text = Label(frame1, text="Give some details about the experience.")
+    details_text = Label(frame2, text="Give some details about the experience.")
     details_text.grid(row=0,column=0,padx=30,pady=10)   
-    details_entry = Text(frame1, width=30, height=10)
+    details_entry = Text(frame2, width=30, height=10)
     details_entry.grid(row=1, column=0)
 
     others_text = Label(frame2, text="Any additional notes? [OPTIONAL]")
@@ -122,20 +122,22 @@ def add_details(vol, edited, details, *widgets):
     configure(3, 1)
 
     if not edited:
-        go_back_button = Button(frame3, text = "Go back", 
-            command = lambda: menu(vol, details_text, details_entry, submit_button, frame1, frame2, frame3))
-        go_back_button.grid(row=1, column=1, padx=10, pady=10)
+        go_back_button = Button(root, text = "Go back", 
+            command = lambda: menu(vol, details_text, details_entry, submit_button, frame1, frame2, frame3, go_back_button))
+       # go_back_button.grid(row=1, column=1, padx=10, pady=10)
+        go_back_button.place(x=100, y=350)
 
-        submit_button = Button(frame3, text = "Submit All", 
-           command = lambda: add_hours(vol, details_entry.get('1.0', 'end'), others_entry.get('1.0', 'end'), False, details_text, details_entry, submit_button, frame1, frame2, frame3))
-        submit_button.grid(row=1, column=2, padx=10,pady=10)
+        submit_button = Button(root, text = "Submit All", 
+           command = lambda: add_hours(vol, details_entry.get('1.0', 'end'), others_entry.get('1.0', 'end'), False, details_text, details_entry, submit_button, frame1, frame2, frame3, go_back_button))
+        #submit_button.grid(row=1, column=2, padx=10,pady=10)
+        submit_button.place(x=200, y=350)
 
     else: # if the user is making edits to their entry
         details_entry.insert(INSERT, details['details'])
         others_entry.insert(INSERT, details['others'])
-        submit_button = Button(frame3, text = "Submit All", 
+        submit_button = Button(root, text = "Submit All", 
             command = lambda: types_of_changes(1, details_entry.get('1.0', 'end'), others_entry.get('1.0', 'end'), vol, details, details_text, details_entry, submit_button, frame1, frame2, frame3))
-        submit_button.grid(row=1, column=1, padx=10,pady=10)
+        submit_button.place(x=200, y=350)
 
 """
 The widgets are destroyed so that the other widgets can be placed on the screen.
@@ -526,18 +528,20 @@ def create_new_collection(list_buttons, *widgets):
     for button in list_buttons:
         destroy(button)
 
-    frame1 = create_frame(1,1)
-
+    frame1 = create_frame(0,1)
     destroy(*widgets)
-    new_col = Label(frame1, text = "What would you like the new collection to be called?")
-    new_col.grid(row=1, column=1, padx=10, pady=10)
+    new_col = Label(root, text = "What would you like the new collection to be called?")
+    #new_col.grid(row=1, column=1, padx=10, pady=10)
+    new_col.place(x=100, y=100)
 
-    new_col_entry = Entry(frame1)
-    new_col_entry.grid(row=2, column=1, padx=10, pady=10)
+    new_col_entry = Entry(root)
+    #new_col_entry.grid(row=2, column=1, padx=10, pady=10)
+    new_col_entry.place(x=100, y=200)
 
-    submit = Button(frame1, text = "Submit", 
+    submit = Button(root, text = "Submit", 
         command = lambda: adds_new_collection(new_col_entry.get(), new_col, new_col_entry, submit, frame1))
-    submit.grid(row=3, column=1, padx=10, pady=10)
+    #submit.grid(row=3, column=1, padx=10, pady=10)
+    submit.place(x=100, y=300)
 
     configure(3, 1)
 
@@ -558,8 +562,9 @@ def adds_new_collection(new_name, *widgets):
 
     frame1 = create_frame(1,1)
 
-    success_message = Label(frame1, text="A new collection has been added!")
-    success_message.grid(row=1, column=1, padx=10, pady=10)
+    success_message = Label(root, text="A new collection has been added!")
+    #success_message.grid(row=1, column=1, padx=10, pady=10)
+    success_message.place(x=100, y=100)
 
     col = db[new_name]
 
@@ -567,8 +572,9 @@ def adds_new_collection(new_name, *widgets):
     col.insert_one({"New": "new"})
     col.delete_one({"New": "new"})
 
-    ok_button = Button(frame1, text = "Ok", command = lambda: view_which_log(success_message, ok_button, frame1))
-    ok_button.grid(row=2, column=1, padx=10, pady=10)
+    ok_button = Button(root, text = "Ok", command = lambda: view_which_log(success_message, ok_button, frame1))
+    #ok_button.grid(row=2, column=1, padx=10, pady=10)
+    ok_button.place(x=100, y=200)
 
 def delete_collection(collection, *widgets):
     answer = messagebox.askyesno('Delete Collection', 'Are you sure you want to delete this collection?')
@@ -594,13 +600,12 @@ def view_which_log(*widgets):
     frame2 = create_frame(1,1)
     frame3 = create_frame(2,1)
 
-
-
-    choose_col = Label(frame1, text = "Which collection would you like to look at?")
-    choose_col.grid(row = 0, column =1)
+    choose_col = Label(root, text = "Which collection would you like to look at?", font="Helvetica 18 bold")
+    #choose_col.grid(row = 0, column =1)
+    choose_col.place(relx=0.5, rely=0, anchor="n")
 
     col_buttons = [] # keeps track of all the collection buttons
-    button_num = 0
+    button_num = 2
     row_num = 1
 
     collection_list = list(db.list_collection_names())
@@ -610,21 +615,23 @@ def view_which_log(*widgets):
       
         # command= lambda s=somevariable: printout(s)) 
         # https://stackoverflow.com/questions/49082862/create-multiple-tkinter-button-with-different-command-but-external-variable
-        b = Button(frame2, text = collection, 
+        b = Button(frame1, text = collection, 
             command = lambda collection_name = collection: access_collection(col_buttons, collection_name, choose_col, new_col, frame1, frame2, frame3))
-        b.grid(row=row_num, column=button_num, padx=10, pady=10)
+        b.grid(row=row_num, column=button_num, padx=10, pady=5)
         col_buttons.append(b)
         button_num +=1
 
         if button_num % 10 == 0:
             row_num +=1
-            button_num = 0
+            button_num = 2
 
   
-    new_col = Button(frame3, text = "Add new collection instead", command = lambda: create_new_collection(col_buttons, choose_col, new_col, frame1, frame2, frame3))
-    new_col.grid(row=row_num+1, column=1, padx=10, pady=10)
+    new_col = Button(root, text = "Add new collection instead", command = lambda: create_new_collection(col_buttons, choose_col, new_col, frame1, frame2, frame3))
+    #new_col.grid(row=5, column=0, padx=10, pady=10)
+    new_col.place(x=300, y=330)
 
     configure(row_num+1, button_num)
+
 
 """
 Now that a collection has been selected, the user will access that collection and continue with the menu options.
@@ -941,8 +948,9 @@ def main():
     my_canvas = Canvas(root, width=800, height=500)
     my_canvas.grid(row=0, column=1)
 
+
     # Set image in canvas
-    my_canvas.create_image(0,0, image=bg, anchor="nw")
+    my_canvas.create_image(0,0, image=bg, anchor='nw')
 
     client = MongoClient('mongodb://localhost:27017') # connects to a specific port
 
