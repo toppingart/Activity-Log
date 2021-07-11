@@ -664,7 +664,7 @@ def view_which_log(*widgets):
         # command= lambda s=somevariable: printout(s)) 
         # https://stackoverflow.com/questions/49082862/create-multiple-tkinter-button-with-different-command-but-external-variable
         b = Button(frame1, text = collection, 
-            command = lambda collection_name = collection: access_collection(col_buttons, collection_name, choose_col, new_col, frame1, frame2, frame3))
+            command = lambda collection_name = collection: access_collection(col_buttons, collection_name, choose_col, new_col, frame1, frame2, frame3, search_col))
         b.grid(row=row_num, column=button_num, padx=10, pady=5)
         col_buttons.append(b)
         button_num +=1
@@ -674,9 +674,12 @@ def view_which_log(*widgets):
             button_num = 2
 
   
-    new_col = Button(root, text = "Add new collection instead", command = lambda: create_new_collection(col_buttons, choose_col, new_col, frame1, frame2, frame3))
+    new_col = Button(root, text = "Add new collection instead", command = lambda: create_new_collection(col_buttons, choose_col, new_col, frame1, frame2, frame3, search_col))
     #new_col.grid(row=5, column=0, padx=10, pady=10)
-    new_col.place(x=300, y=330)
+    new_col.place(x=150, y=330)
+
+    search_col = Button(root, text = "Search for collections by keyword")
+    search_col.place(x=380, y=330)
 
     configure(row_num+1, button_num)
 
@@ -714,7 +717,7 @@ def no_entries(vol, search, *widgets):
     if search == False:
         no_logs = Label(frame1, text = "There are currently no entries in this collection.")
         no_logs.grid(row=1, column=1)
-    else:
+    else: # search is true
         no_logs = Label(frame1, text = "No results have been returned based on your search.")
         no_logs.grid(row=1, column=1)
 
@@ -756,7 +759,7 @@ def view_log(vol, search, keyword=None, *widgets):
 
     # user has searched but no search results popped up
     elif search == True and vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}}) == 0:
-        no_entries(vol, search)
+        no_entries(vol, True)
 
     try:
         # if we don't want searching (or if the user has already searched before), then go ahead and display the results
@@ -770,7 +773,7 @@ def view_log(vol, search, keyword=None, *widgets):
                 count = vol.estimated_document_count()
 
             if count == 0: # no entries
-                no_entries(vol, search)
+                no_entries(vol, True)
 
 
 
@@ -802,7 +805,7 @@ def view_log(vol, search, keyword=None, *widgets):
                 frame_canvas.grid_propagate(False)
 
                 # Add a canvas in that frame
-                canvas = Canvas(frame_canvas, bg="yellow")
+                canvas = Canvas(frame_canvas, bg="lavender blush")
                 canvas.grid(row=0, column=0, sticky="news")
 
 
@@ -926,20 +929,25 @@ def ask_entry_changes(vol, result, keyword, *widgets):
         command = lambda: view_log(vol, False, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
     go_back_button.grid(row=3, column=1, padx=10, pady=10)
 
-    additional = Button(frame2, text = "View Additional Notes", 
-        command = lambda: view_additional_notes(vol, result, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2))
-    additional.grid(row=1, column=1)
+    additional = Button(root, text = "View Additional Notes", 
+        command = lambda: view_additional_notes(vol, result, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
+    additional.place(x=300, y=300)
 
 
 def view_additional_notes(vol, result, keyword, *widgets):
     destroy(*widgets)
-    frame1 = create_frame(1,1)
-    additional_notes = Label(frame1, text = "Additional notes:\n\n " + result['others'])
-    additional_notes.grid(row=1, column=1)
 
-    go_back_button = Button(frame1, text = "Go back", 
-        command = lambda: ask_entry_changes(vol, result, keyword, frame1, additional_notes, go_back_button))
-    go_back_button.grid(row=3, column=1, padx=10, pady=10)
+    if len(result['others'].strip()) == 0:
+        additional_details = "There are no additional details added."
+    else:
+        additional_details = result['others']
+
+    additional_notes = Label(root, text = "Additional notes:\n\n " + additional_details)
+    additional_notes.place(x=root.winfo_width()/2, y=0)
+
+    go_back_button = Button(root, text = "Go back", 
+        command = lambda: ask_entry_changes(vol, result, keyword, additional_notes, go_back_button))
+    go_back_button.place(x=root.winfo_width()/2, y=root.winfo_height() - 50)
 
     configure(3, 1)
 
@@ -984,7 +992,7 @@ def menu(collection, *widgets):
         string_collection = collection
     else:
         vol = collection
-        
+
     db_label = Label(root, text="Collection Name: " + string_collection, font="Helvetica 18 bold")
     db_label.place(x=root.winfo_width()/3 - 10, y=0)
 
