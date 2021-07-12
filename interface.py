@@ -59,7 +59,7 @@ def search_with_input(vol, entry, *widgets):
     # case insensitive is allowed
     results = vol.find({'details': {'$regex': keyword, '$options': 'i'}})
     
-
+    # search is false since it has "already been searched"
     view_log(vol, False, keyword, *widgets)
 
 """
@@ -644,10 +644,6 @@ def view_which_log(*widgets):
 
     destroy(*widgets)
 
-    frame1 = create_frame(0,1)
-    frame2 = create_frame(1,1)
-    frame3 = create_frame(2,1)
-
     choose_col = Label(root, text = "Which collection would you like to look at?", font="Helvetica 18 bold")
     #choose_col.grid(row = 0, column =1)
     choose_col.place(relx=0.5, rely=0, anchor="n")
@@ -659,6 +655,17 @@ def view_which_log(*widgets):
     collection_list = list(db.list_collection_names())
     collection_list.sort()
 
+    selected_option = StringVar()
+    #dropdown_menu = OptionMenu(root, selected_option, *collection_list)
+    #dropdown_menu.place(x=100, y=100)
+
+    combo_box = ttk.Combobox(root, textvariable=selected_option, value=collection_list, state="readonly")
+    combo_box.place(x=250, y=100)
+    combo_box.config(height=5)
+    #combo_box.bind("<<ComboboxSelected>>", p(combo_box))
+
+
+    """
     for collection in collection_list:
       
         # command= lambda s=somevariable: printout(s)) 
@@ -672,17 +679,31 @@ def view_which_log(*widgets):
         if button_num % 10 == 0:
             row_num +=1
             button_num = 2
-
+    """
   
-    new_col = Button(root, text = "Add new collection instead", command = lambda: create_new_collection(col_buttons, choose_col, new_col, frame1, frame2, frame3, search_col))
+    new_col = Button(root, text = "Add new collection instead", command = lambda: create_new_collection(choose_col,
+    combo_box, new_col, search_col))
     #new_col.grid(row=5, column=0, padx=10, pady=10)
     new_col.place(x=150, y=330)
 
     search_col = Button(root, text = "Search for collections by keyword")
     search_col.place(x=380, y=330)
 
+    access_button = Button(root, text = "Access this collection", command = lambda: access_collection(combo_box.get(), choose_col, combo_box, new_col,
+        search_col, access_button))
+    access_button.place(x=250, y=150)
+
+
     configure(row_num+1, button_num)
 
+
+def search_col_by_keyword(keyword, *widgets):
+    destroy(*widgets)
+    collection_list = list(db.list_collection_names())
+
+    document_num = vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}})
+    #print(type(s.get()))
+    #access_collection(s.get())
 
 """
 Now that a collection has been selected, the user will access that collection and continue with the menu options.
@@ -695,10 +716,10 @@ Input:
 Output: None
 Calls: menu()
 """
-def access_collection(button_list, collection_name, *widgets):
+def access_collection(collection_name, *widgets):
 
-    for button in button_list:
-        destroy(button)
+    #for button in button_list:
+        #destroy(button)
 
     destroy(*widgets)
     menu(collection_name)
@@ -772,12 +793,12 @@ def view_log(vol, search, keyword=None, *widgets):
                 results = vol.find()
                 count = vol.estimated_document_count()
 
-            if count == 0: # no entries
-                no_entries(vol, True)
+                if count == 0: # no entries
+                    no_entries(vol, False)
 
 
 
-            else: # 1 or more entries
+            if (count >= 1): # 1 or more entries
 
                 results = results.sort([("date", 1), ("startdate", 1)])
 
@@ -925,8 +946,14 @@ def ask_entry_changes(vol, result, keyword, *widgets):
         where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
     dates_button.grid(row=2, column=2, padx=10, pady=10)
 
+
+    if keyword != None:
+        search = True
+    else:
+        search = False
+
     go_back_button = Button(frame1, text = "Go back", 
-        command = lambda: view_log(vol, False, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
+        command = lambda: view_log(vol, search, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
     go_back_button.grid(row=3, column=1, padx=10, pady=10)
 
     additional = Button(root, text = "View Additional Notes", 
@@ -986,7 +1013,6 @@ def menu(collection, *widgets):
     destroy(*widgets)
 
     global string_collection
-
     if isinstance(collection, str):
         vol = db[collection]
         string_collection = collection
