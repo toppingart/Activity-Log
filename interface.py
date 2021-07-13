@@ -1,45 +1,59 @@
 from pymongo import MongoClient
+from tkinter import messagebox, ttk
 from tkinter import *
-from tkinter import messagebox
-from tkinter import ttk
 from datetime import datetime, date
 import sys
 from tkinter.font import BOLD
 from PIL import Image, ImageTk
+
 """
 The user enters one or more keywords to narrow down the results (when looking for a specific record).
 
 Input: 
 - vol: allows us to access the contents of the collection
+- filter_col: True if we're searching for the purpose of filtering out collections, not records. False otherwise.
 - *widgets: 0 or more widgets to be destroyed (cleared before displaying new widgets)
-
-Output: None
-Calls: search_with_input() or view_log()
 """
-def search_keywords(vol, *widgets):
+def search_keywords(vol, filter_col, *widgets):
 
     destroy(*widgets)
+    widget_list = []
 
     frame1 = create_frame(0,1)
+    widget_list.append(frame1)
 
     search_label = Label(frame1, text="What would you like to search for?")
     search_label.grid(row=0, column=1, padx=10, pady=10)
+    widget_list.append(search_label)
 
     search_entry = Entry(frame1)
     search_entry.grid(row=1, column=1, padx=10, pady=10)
+    widget_list.append(search_entry)
 
-    submit = Button(frame1, text = "Submit", 
-        command = lambda: search_with_input(vol, search_entry.get(), search_label, search_entry, submit, view_all, frame1))
-    submit.grid(row=2, column=1, padx=10, pady=10)
+    if filter_col == False:
+        submit = Button(frame1, text = "Submit", 
+        command = lambda: search_with_input(vol, search_entry.get(), widget_list))
+        submit.grid(row=2, column=1, padx=10, pady=10)
+        widget_list.append(submit)
 
-    view_all = Button(frame1, text = "View all instead", 
+        view_all = Button(frame1, text = "View all instead", 
         command = lambda: view_log(vol, False, None, search_label, search_entry, submit, view_all, frame1))
-    view_all.grid(row=3, column=1, padx=10, pady=10)
+        view_all.grid(row=3, column=1, padx=10, pady=10)
+        widget_list.append(view_all)
+
+    else: # if filter_col is true
+        submit = Button(frame1, text = "Submit", 
+        command = lambda: filter_col_by_keyword(vol, search_entry.get(), search_label, search_entry, submit, frame1, back))
+        submit.grid(row=2, column=1, padx=10, pady=10)
+
+        back = Button(frame1, text = "Go back", command = lambda: view_which_log(None, search_label, 
+            search_entry, submit, frame1, back))
+        back.grid(row=3, column=1, padx=10, pady=10)
 
     configure(3,1)
 
 """
-Adds wildcards (*) and allows for case-insenstive searches.
+Adds wildcards (*) and allows for case-insensitive searches.
 
 Input:
 - vol
@@ -51,7 +65,9 @@ Calls: view_log()
 """
 def search_with_input(vol, entry, *widgets):
 
+    print(*widgets)
     destroy(*widgets)
+
 
     # wildcards are used in between the entry
     keyword = '.*' + entry + '.*'
@@ -124,17 +140,16 @@ def add_details(vol, edited, details, keyword, *widgets):
     if not edited:
         go_back_button = Button(root, text = "Go back", 
             command = lambda: menu(vol, details_text, details_entry, submit_button, frame1, frame2, frame3, go_back_button))
-       # go_back_button.grid(row=1, column=1, padx=10, pady=10)
-        go_back_button.place(x=100, y=350)
+        go_back_button.place(x=250, y=350)
 
         if isinstance(details, list):
             details_entry.insert(INSERT, details[0])
             others_entry.insert(INSERT, details[1])
 
         submit_button = Button(root, text = "Submit All", 
-           command = lambda: add_hours(vol, details_entry.get('1.0', 'end'), others_entry.get('1.0', 'end'), None, False, details_text, details_entry, submit_button, frame1, frame2, frame3, go_back_button))
-        #submit_button.grid(row=1, column=2, padx=10,pady=10)
-        submit_button.place(x=200, y=350)
+           command = lambda: add_hours(vol, details_entry.get('1.0', 'end'), others_entry.get('1.0', 'end'), None, False, 
+            details_text, details_entry, submit_button, frame1, frame2, frame3, go_back_button))
+        submit_button.place(x=350, y=350)
 
     else: # if the user is making edits to their entry
 
@@ -148,7 +163,7 @@ def add_details(vol, edited, details, keyword, *widgets):
 
         submit_button = Button(root, text = "Submit All", 
             command = lambda: types_of_changes(1, details_entry.get('1.0', 'end'), others_entry.get('1.0', 'end'), vol, details, details_text, details_entry, submit_button, go_back_button, frame1, frame2, frame3))
-        submit_button.place(x=200, y=350)
+        submit_button.place(x=400, y=350)
 
 """
 The widgets are destroyed so that the other widgets can be placed on the screen.
@@ -160,6 +175,7 @@ def destroy(*widgets):
     for item in widgets:
 
         if isinstance(item, list):
+
             for i in item[0]:
                 i.destroy()
             continue
@@ -202,24 +218,24 @@ def add_hours(vol, details, others, input_hours, edited, *widgets):
         if input_hours != None:
             hours_entry.insert(INSERT, input_hours)
 
-        submit_button = Button(frame1, text = "Submit", 
-            command = lambda: add_dates(vol, user_input_list, hours_entry.get(), hours_text, hours_entry, submit_button, frame1))
-        submit_button.grid(row=2, column=1, padx=50,pady=50)
+        submit_button = Button(root, text = "Submit", 
+            command = lambda: add_dates(vol, user_input_list, hours_entry.get(), hours_text, hours_entry, submit_button, frame1, go_back_button))
 
         # add_details(vol, edited, details, keyword, *widgets)
-        go_back_button = Button(frame1, text="Go back", command = lambda: add_details(vol, False, user_input_list, None, hours_text,hours_entry,
+        go_back_button = Button(root, text="Go back", command = lambda: add_details(vol, False, user_input_list, None, hours_text,hours_entry,
             submit_button, frame1, go_back_button))
 
     else: # happens if the user wants to make edits to their entry (not a new entry)
         hours_entry.insert(INSERT, details['hours'])
-        submit_button = Button(frame1, text = "Submit",
-            command = lambda: types_of_changes(2, hours_entry.get(), None, vol, details, hours_text, hours_entry, submit_button, frame1))
-        submit_button.grid(row=2, column=1, padx=50,pady=50)
+        submit_button = Button(root, text = "Submit",
+            command = lambda: types_of_changes(2, hours_entry.get(), None, vol, details, hours_text, hours_entry, submit_button, frame1, go_back_button))
 
-        go_back_button = Button(frame1, text="Go back", command = lambda: ask_entry_changes(vol, details, None, hours_text,hours_entry,
+
+        go_back_button = Button(root, text="Go back", command = lambda: ask_entry_changes(vol, details, None, hours_text,hours_entry,
             submit_button, frame1, go_back_button))
 
-    go_back_button.grid(row=3, column=1, padx=50,pady=50)
+    submit_button.place(x=380, y=300)
+    go_back_button.place(x=280, y=300)
 
     configure(2, 1)
 
@@ -298,18 +314,16 @@ def add_dates(vol, user_list, hours,*widgets):
     one_day_button = Button(frame1, text = "One day", 
         command = lambda: one_day_option(vol, user_list, False, dates_text, one_day_button, m_days_button, frame1,
             go_back_button))
-    one_day_button.grid(row=1, column=1, padx=50,pady=50)
+    one_day_button.grid(row=1, column=1, padx=50,pady=10)
 
     m_days_button = Button(frame1, text = "Multiple days", 
         command = lambda: multiple_days_option(vol, user_list, False, dates_text, one_day_button, m_days_button, frame1,
             go_back_button))
-    m_days_button.grid(row=2, column=1, padx=50, pady=50)
+    m_days_button.grid(row=2, column=1, padx=50, pady=10)
 
-    go_back_button = Button(frame1, text="Go back", command = lambda: add_hours(vol, user_list[0], user_list[1], hours, False, 
+    go_back_button = Button(root, text="Go back", command = lambda: add_hours(vol, user_list[0], user_list[1], hours, False, 
         dates_text, one_day_button, m_days_button, frame1, go_back_button))
-    go_back_button.grid(row=3, column=1, padx=50, pady=50)
-    # add_hours(vol, details, others, edited, *widgets):
-
+    go_back_button.place(x=330, y=300)
 
     configure(3, 1)
 
@@ -361,21 +375,21 @@ def one_day_option(vol, user_list, edited, *widgets):
     if not edited:
         submit_button = Button(frame1, text = "Submit", 
         command = lambda: all_user_inputs(vol, user_list, day_text, day_entry, submit_button, frame1, go_back_button, date = day_entry.get()))
-        submit_button.grid(row=2, column=1, padx=50,pady=50)
+        submit_button.grid(row=2, column=1, padx=50,pady=10)
 
-        go_back_button = Button(frame1, text = "Go back", 
+        go_back_button = Button(root, text = "Go back", 
         command = lambda: add_dates(vol, user_list, user_list[2], day_text, day_entry, submit_button, frame1, go_back_button))
     else:
 
         day_entry.insert(INSERT, user_list['date'].strftime('%m/%d/%y'))
         submit_button = Button(frame1, text = "Submit", 
         command = lambda: types_of_changes(3, day_entry.get(), None, vol, user_list, day_text, day_entry, submit_button, frame1, go_back_button))
-        submit_button.grid(row=2, column=1, padx=50,pady=50)
+        submit_button.grid(row=2, column=1, padx=50,pady=10)
 
-        go_back_button = Button(frame1, text="Go back", command = lambda: ask_entry_changes(vol, user_list, None, day_text, day_entry,
+        go_back_button = Button(root, text="Go back", command = lambda: ask_entry_changes(vol, user_list, None, day_text, day_entry,
             submit_button, frame1, go_back_button))
 
-    go_back_button.grid(row=3, column=1, padx=10, pady=10)
+    go_back_button.place(x=330, y=300)
 
 
 """
@@ -420,9 +434,9 @@ def multiple_days_option(vol, user_list, edited, *widgets):
         command = lambda: all_user_inputs(vol, user_list, days_text, start_day_text, end_day_text, 
             start_day_entry, end_day_entry, submit_button, frame1, go_back_button,
             startdate = start_day_entry.get(), enddate = end_day_entry.get()))
-        submit_button.grid(row=5, column=1, padx=50,pady=50)
+        submit_button.grid(row=5, column=1, padx=50,pady=10)
 
-        go_back_button = Button(frame1, text = "Go back", 
+        go_back_button = Button(root, text = "Go back", 
         command = lambda: add_dates(vol, user_list, user_list[2], start_day_entry, end_day_entry, submit_button, frame1, go_back_button))
         
 
@@ -432,15 +446,12 @@ def multiple_days_option(vol, user_list, edited, *widgets):
         submit_button = Button(frame1, text = "Submit", 
         command = lambda: types_of_changes(4, [start_day_entry.get(), end_day_entry.get()], None, vol, user_list, days_text, start_day_text, end_day_text, 
             start_day_entry, end_day_entry, submit_button, frame1, go_back_button))
-        submit_button.grid(row=5, column=1, padx=50,pady=50)
+        submit_button.grid(row=5, column=1, padx=50,pady=10)
 
-        go_back_button = Button(frame1, text="Go back", command = lambda: ask_entry_changes(vol, user_list, None, days_text, start_day_text, end_day_text, 
+        go_back_button = Button(root, text="Go back", command = lambda: ask_entry_changes(vol, user_list, None, days_text, start_day_text, end_day_text, 
             start_day_entry, end_day_entry, submit_button, frame1, go_back_button))
 
-    go_back_button.grid(row=6, column=1, padx=10, pady=10)
-
-
-
+    go_back_button.place(x=335, y=350)
 
 """
 Checks if the date entered by the user is a valid date (valid day, month, and year).
@@ -498,11 +509,11 @@ def successful_message(vol, user_list, type_of_success, *widgets):
         back_to_menu_button = Button(root, text = "Back to menu", 
         command = lambda: menu(vol, success_message, exit_button, back_to_menu_button, frame1, frame2))
        # back_to_menu_button.grid(row=1, column=1, padx=10, pady=10)
-        back_to_menu_button.place(x=300, y=300)
+        back_to_menu_button.place(x=300, y=250)
 
         # exit option
         exit_button= Button(root, text = "Exit", command = lambda: sys.exit()) # if pressed, exits the program
-        exit_button.place(x=400, y=300)
+        exit_button.place(x=400, y=250)
 
         configure(2,1)
 
@@ -532,30 +543,32 @@ def all_user_inputs(vol, user_list, *widgets, **days):
                 break # done checking, break out of for loop
             else: 
                 check_date(days["startdate"])
+                check_date(days["enddate"])
+
+                if (datetime.strptime(day['startdate'], "%m/%d/%y") >= (datetime.strptime(day['enddate']))):
+                    raise ValueError
 
                 #['ad\n', '\n', 5]
                 if len(user_list) == 3: # already contains the details, others, hours
                     user_list.append(days["startdate"]) # if statement prevents startdate from being added again
 
-                check_date(days["enddate"])
+
 
                 if len(user_list) == 4: # already contains details, others, hours, and startdate
                     user_list.append(days["enddate"]) # if statement prevents enddate from being added again
                 break
 
     except NameError as n:
-        messagebox.showerror("Dates Error", "Please enter a valid date.")
+        messagebox.showerror("Dates Error", "Please enter valid date(s)")
 
     except ValueError as v:
-        messagebox.showerror("Dates Error", "Please enter a valid date.")
+        messagebox.showerror("Dates Error", "Please enter valid date(s)")
 
     except Exception as e:
         messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
 
     else:
         successful_message(vol, user_list, 1, *widgets)
-
-
 
 """
 Called if the user wants to create a new collection.
@@ -574,26 +587,22 @@ def create_new_collection(list_buttons, *widgets):
 
     frame1 = create_frame(0,1)
     destroy(*widgets)
-    new_col = Label(root, text = "What would you like the new collection to be called?")
-    #new_col.grid(row=1, column=1, padx=10, pady=10)
+    new_col = Label(root, text = "What would you like the new collection to be called?", font="Helvetica 14 bold")
     new_col.place(x=100, y=100)
 
     new_col_entry = Entry(root)
-    #new_col_entry.grid(row=2, column=1, padx=10, pady=10)
     new_col_entry.place(x=100, y=200)
 
     submit = Button(root, text = "Submit", 
         command = lambda: adds_new_collection(new_col_entry.get(), new_col, new_col_entry, submit, frame1, go_back_button))
-    #submit.grid(row=3, column=1, padx=10, pady=10)
-    submit.place(x=100, y=300)
+    submit.place(x=200, y=300)
 
     go_back_button = Button(root, text = "Go back", 
-        command = lambda: view_which_log(frame1, new_col, new_col_entry, submit, go_back_button))
-    go_back_button.place(x=200, y=300)
+        command = lambda: view_which_log(None, frame1, new_col, new_col_entry, submit, go_back_button))
+    go_back_button.place(x=100, y=300)
 
     configure(3, 1)
 
-  
 """
 Adds the new collection.
 
@@ -610,8 +619,7 @@ def adds_new_collection(new_name, *widgets):
 
     frame1 = create_frame(1,1)
 
-    success_message = Label(root, text="A new collection has been added!")
-    #success_message.grid(row=1, column=1, padx=10, pady=10)
+    success_message = Label(root, text="A new collection has been added!", font="Helvetica 14 bold")
     success_message.place(x=100, y=100)
 
     col = db[new_name]
@@ -620,7 +628,7 @@ def adds_new_collection(new_name, *widgets):
     col.insert_one({"New": "new"})
     col.delete_one({"New": "new"})
 
-    ok_button = Button(root, text = "Ok", command = lambda: view_which_log(success_message, ok_button, frame1))
+    ok_button = Button(root, text = "OK", command = lambda: view_which_log(None, None, success_message, ok_button, frame1))
     #ok_button.grid(row=2, column=1, padx=10, pady=10)
     ok_button.place(x=100, y=200)
 
@@ -628,7 +636,7 @@ def delete_collection(collection, *widgets):
     answer = messagebox.askyesno('Delete Collection', 'Are you sure you want to delete this collection?')
     if answer == True:
         collection.drop()
-        view_which_log(*widgets)
+        view_which_log(None, None, *widgets)
 
 """
 The date(s), details of the experience/activity, and the hour(s) are displayed on the screen.
@@ -640,70 +648,64 @@ Output: None
 Calls: access_collection() or create_new_collection()
 """
 
-def view_which_log(*widgets):
+def view_which_log(filter_col, vol = None, *widgets):
 
     destroy(*widgets)
+    widgets_list = []
 
     choose_col = Label(root, text = "Which collection would you like to look at?", font="Helvetica 18 bold")
-    #choose_col.grid(row = 0, column =1)
     choose_col.place(relx=0.5, rely=0, anchor="n")
+    widgets_list.append(choose_col)
 
-    col_buttons = [] # keeps track of all the collection buttons
-    button_num = 2
-    row_num = 1
-
-    collection_list = list(db.list_collection_names())
-    collection_list.sort()
+    if filter_col == None:
+        collection_list = list(db.list_collection_names())
+        collection_list.sort()
+    else:
+        collection_list = filter_col
 
     selected_option = StringVar()
-    #dropdown_menu = OptionMenu(root, selected_option, *collection_list)
-    #dropdown_menu.place(x=100, y=100)
 
-    combo_box = ttk.Combobox(root, textvariable=selected_option, value=collection_list, state="readonly")
-    combo_box.place(x=250, y=100)
+    combo_box = ttk.Combobox(root, values=collection_list, state="readonly")
     combo_box.config(height=5)
-    #combo_box.bind("<<ComboboxSelected>>", p(combo_box))
-
-
-    """
-    for collection in collection_list:
-      
-        # command= lambda s=somevariable: printout(s)) 
-        # https://stackoverflow.com/questions/49082862/create-multiple-tkinter-button-with-different-command-but-external-variable
-        b = Button(frame1, text = collection, 
-            command = lambda collection_name = collection: access_collection(col_buttons, collection_name, choose_col, new_col, frame1, frame2, frame3, search_col))
-        b.grid(row=row_num, column=button_num, padx=10, pady=5)
-        col_buttons.append(b)
-        button_num +=1
-
-        if button_num % 10 == 0:
-            row_num +=1
-            button_num = 2
-    """
+    combo_box.place(x=250, y=100)
+    combo_box.current(0)
+    widgets_list.append(combo_box)
   
-    new_col = Button(root, text = "Add new collection instead", command = lambda: create_new_collection(choose_col,
-    combo_box, new_col, search_col))
-    #new_col.grid(row=5, column=0, padx=10, pady=10)
+    new_col = Button(root, text = "Add new collection instead", command = lambda: create_new_collection(widgets_list))
     new_col.place(x=150, y=330)
+    widgets_list.append(new_col)
 
-    search_col = Button(root, text = "Search for collections by keyword")
+    search_col = Button(root, text = "Search for collections by keyword", 
+        command = lambda: search_keywords(vol, True,choose_col, combo_box, new_col, search_col, access_button))
     search_col.place(x=380, y=330)
+    widgets_list.append(search_col)
 
     access_button = Button(root, text = "Access this collection", command = lambda: access_collection(combo_box.get(), choose_col, combo_box, new_col,
         search_col, access_button))
     access_button.place(x=250, y=150)
+    widgets_list.append(access_button)
 
+    #configure(5,5)
 
-    configure(row_num+1, button_num)
-
-
-def search_col_by_keyword(keyword, *widgets):
-    destroy(*widgets)
+def filter_col_by_keyword(vol, keyword, *widgets):
     collection_list = list(db.list_collection_names())
+    filtered_list = []
 
-    document_num = vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}})
-    #print(type(s.get()))
-    #access_collection(s.get())
+    for collection in collection_list:
+        vol = db[collection]
+
+        document_num = vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}})
+
+        if document_num != 0:
+            filtered_list.append(collection)
+
+    if len(filtered_list) !=0:
+        destroy(*widgets)
+        view_which_log(filtered_list, vol)
+    else:
+        messagebox.showerror("No collections", "No collections have been returned. Try searching something else.")
+        return
+
 
 """
 Now that a collection has been selected, the user will access that collection and continue with the menu options.
@@ -717,10 +719,6 @@ Output: None
 Calls: menu()
 """
 def access_collection(collection_name, *widgets):
-
-    #for button in button_list:
-        #destroy(button)
-
     destroy(*widgets)
     menu(collection_name)
     
@@ -750,13 +748,6 @@ def no_entries(vol, search, *widgets):
 
     configure(2,1)
 
-
-def on_mouse_wheel(canvas, event):
-	pass
-	
-
-
-
 """
 Allows the user to see the entries displayed, and they are able to scroll through them and make edits, if necessary.
 
@@ -776,7 +767,7 @@ def view_log(vol, search, keyword=None, *widgets):
 
     # if keyword is None and we want to allow the user to search
     if not isinstance(keyword,str) and search == True:
-        search_keywords(vol, *widgets)
+        search_keywords(vol, False, *widgets)
 
     # user has searched but no search results popped up
     elif search == True and vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}}) == 0:
@@ -789,6 +780,9 @@ def view_log(vol, search, keyword=None, *widgets):
                 results = vol.find({'details': {'$regex': keyword, '$options': 'i'}}) # has all the results
                 count = vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}}) # number of entries (documents)
 
+                if count == 0: # no entries
+                    no_entries(vol, True)
+
             elif keyword == None: # viewing all
                 results = vol.find()
                 count = vol.estimated_document_count()
@@ -796,24 +790,16 @@ def view_log(vol, search, keyword=None, *widgets):
                 if count == 0: # no entries
                     no_entries(vol, False)
 
-
-
             if (count >= 1): # 1 or more entries
 
                 results = results.sort([("date", 1), ("startdate", 1)])
 
                 row_num = 0
-                frame_main = Frame(my_canvas, width=800, height=400, bg='pink')
+                frame_main = Frame(my_canvas, width=800, height=400, bg='light pink')
                 frame_main.grid(row=0, column=1, sticky='news')
 
-                #my_canvas.grid(row=0, column=1)
-               # frame_main.place(x=100, y=100)
-
-               # my_canvas.config(bg='pink')
                 my_canvas.create_window((0,0), window=frame_main, anchor='nw')#, width=750)
-               
-                #frame_main.grid(sticky='news')
-
+        
                 frame_main.grid_rowconfigure(0, weight=1)
                 frame_main.grid_columnconfigure(0, weight=1)
                 
@@ -842,16 +828,13 @@ def view_log(vol, search, keyword=None, *widgets):
 
 
                 # Set image in canvas
-
-
                 canvas.create_window((0,0), window=frame_buttons, anchor='nw')
 
                 # allows you to use arrow keys
                 canvas.bind("<Up>",    lambda event: canvas.yview_scroll(-1, "units"))
                 canvas.bind("<Down>",  lambda event: canvas.yview_scroll( 1, "units"))
+           
                 canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(-1 * int((event.delta / 120)), "units"))
-
-
                 canvas.focus_set()
                 canvas.bind("<1>", lambda event: self.canvas.focus_set())
                 
@@ -868,11 +851,10 @@ def view_log(vol, search, keyword=None, *widgets):
                     else:
                         date_display = results[i]['date'].strftime('%m/%d/%y')
 
-                    #photo=ImageTk.PhotoImage(file="paper.png")
-                    #canvas.create_image(10,10,image=photo)
                     for j in range(0, columns):
-                        buttons[i][j] = Button(frame_buttons, bg = 'white', fg='black', font="Helvetica 9", height = 10, width=10, text= 'date: ' + date_display + '\n' + 
-                            'details: ' + results[i]['details'] + '\n' + 'hours: ' + str(results[i]['hours']),
+                        buttons[i][j] = Button(frame_buttons, bg = 'white', fg='black', font="Helvetica 9", height = 10, width=10, 
+                            text= 'date: ' + date_display + '\n' + 
+                            'details: ' + results[i]['details'].strip('\n') + '\n' + 'hours: ' + str(results[i]['hours']),
                             command = lambda i=i: ask_entry_changes(vol, results[i], keyword, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
                         menu_button, search_keywords_button))
                         buttons[i][j].grid(row=i, column=j, ipadx=310, ipady=50,pady=50)
@@ -891,17 +873,15 @@ def view_log(vol, search, keyword=None, *widgets):
 
                 
                 search_keywords_button = Button(root, text = "Search using keywords instead", 
-                    command = lambda: search_keywords(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
+                    command = lambda: search_keywords(vol, False, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
                         menu_button, search_keywords_button))
-                #search_keywords_button.grid(row=1, column=0, padx=10, pady=10)
-                search_keywords_button.place(x=250, y=300)
+
+                search_keywords_button.place(x=280, y=350)
 
                 menu_button = Button(root, text = "Menu", 
                     command = lambda: menu(vol, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, menu_button, search_keywords_button))
-                #menu_button.grid(row = 2, column = 0, padx=10, pady=10)
-                menu_button.place(x=300, y=350)
+                menu_button.place(x=350, y=300)
                 
-
     except Exception as e:
         print(e)
 
@@ -909,9 +889,6 @@ def filter_by_date(results, *widgets):
     if var1.get() == 1:
         results.sort('date', pymongo.DESCENDING)
         return results
-
-def print_test():
-    print(var1.get())
 
 """
 Asks the user what part of their entry they would like to change.
@@ -946,7 +923,6 @@ def ask_entry_changes(vol, result, keyword, *widgets):
         where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
     dates_button.grid(row=2, column=2, padx=10, pady=10)
 
-
     if keyword != None:
         search = True
     else:
@@ -960,7 +936,6 @@ def ask_entry_changes(vol, result, keyword, *widgets):
         command = lambda: view_additional_notes(vol, result, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button, frame1, frame2, additional))
     additional.place(x=300, y=300)
 
-
 def view_additional_notes(vol, result, keyword, *widgets):
     destroy(*widgets)
 
@@ -970,11 +945,11 @@ def view_additional_notes(vol, result, keyword, *widgets):
         additional_details = result['others']
 
     additional_notes = Label(root, text = "Additional notes:\n\n " + additional_details)
-    additional_notes.place(x=root.winfo_width()/2, y=0)
+    additional_notes.place(x=root.winfo_width()/2 - 50, y=0)
 
     go_back_button = Button(root, text = "Go back", 
         command = lambda: ask_entry_changes(vol, result, keyword, additional_notes, go_back_button))
-    go_back_button.place(x=root.winfo_width()/2, y=root.winfo_height() - 50)
+    go_back_button.place(x=root.winfo_width()/2 - 15, y=root.winfo_height() - 50)
 
     configure(3, 1)
 
@@ -1013,6 +988,7 @@ def menu(collection, *widgets):
     destroy(*widgets)
 
     global string_collection
+    global vol
     if isinstance(collection, str):
         vol = db[collection]
         string_collection = collection
@@ -1038,7 +1014,7 @@ def menu(collection, *widgets):
     view_act_log.grid(row=2, column=1, padx = 50, pady=10)
 
     another_collection_button = Button(frame1, text = "Choose another collection",
-     command = lambda: view_which_log(menu_label, add_record_1, view_act_log, frame1, another_collection_button, db_label))
+     command = lambda: view_which_log(None, menu_label, add_record_1, view_act_log, frame1, another_collection_button, db_label))
     another_collection_button.grid(row=3, column=1, padx=50, pady=10)
 
     delete_collection_button = Button(frame1, text = "Delete this collection", 
@@ -1053,35 +1029,29 @@ MAIN
 """
 def main():
 
-    global root, client, db, vol
+    global root, client, db, vol, my_canvas
+
 
     root = Tk()
     root.title("Activity Log")
     root.geometry("720x400")
+    root.resizable(False, False)
 
+    bg=ImageTk.PhotoImage(file="394901.png") # pink and light blue background
 
-    bg=ImageTk.PhotoImage(file="394901.png")
-    #photoimage = bg.subsample(3, 3) 
-    # Create a canvas
-    global my_canvas
     my_canvas = Canvas(root, width=800, height=500)
     my_canvas.grid(row=0, column=1)
 
-
-    # Set image in canvas
+    # setting image in canvas
     my_canvas.create_image(0,0, image=bg, tag='img', anchor='nw')
 
     client = MongoClient('mongodb://localhost:27017') # connects to a specific port
 
-    today = date.today()
-
-    current_year = today.strftime("%Y")
-
-    # open the database (depends on year)
+    # open the database
     db = client["activities"]
     
-    # starts off by making the user select a log (or collection) to view
-    view_which_log()
+    # starts off by making the user select a collection to view
+    view_which_log(None)
     root.mainloop()
 
 main()
