@@ -1,7 +1,7 @@
-from interface2 import *
-import others
 import global_vars
 from imports import *
+import menu_screen
+from others import *
 
 """
 Now that a collection has been selected, the user will access that collection and continue with the menu options.
@@ -16,7 +16,7 @@ Calls: menu()
 """
 def access_collection(collection_name, *widgets):
     destroy(*widgets)
-    menu(collection_name)
+    menu_screen.menu(collection_name)
 
 
 """
@@ -31,9 +31,10 @@ Calls: adds_new_collection()
 """
 def create_new_collection(*widgets): 
     from view import view_which_log
+   
 
 
-    frame1 = others.create_frame(0,1)
+    frame1 = create_frame(0,1)
     destroy(*widgets)
     new_col = Label(global_vars.root, text = "What would you like the new collection to be called?", font="Helvetica 14 bold")
     new_col.place(x=100, y=100)
@@ -49,7 +50,7 @@ def create_new_collection(*widgets):
         command = lambda: view_which_log(None, frame1, new_col, new_col_entry, submit, go_back_button))
     go_back_button.place(x=100, y=300)
 
-    others.configure(3, 1)
+    configure(3, 1)
 
 """
 Adds the new collection.

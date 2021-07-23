@@ -1,7 +1,8 @@
-from interface2 import *
+from others import *
 from imports import *
 import global_vars
 import searching
+#import menu_screen
 
 
 """
@@ -45,8 +46,8 @@ def view_which_log(filter_col, *widgets):
     search_col.place(x=380, y=330)
 
 
-    access_button = Button(global_vars.root, text = "Access this collection", command = lambda: collections_related.access_collection(combo_box.get(), choose_col, combo_box, new_col,
-        search_col, access_button))
+    access_button = Button(global_vars.root, text = "Access this collection", command = lambda: collections_related.access_collection(combo_box.get(), combo_box, new_col,
+        search_col, access_button, choose_col))
     access_button.place(x=250, y=150)
 
 
@@ -67,7 +68,10 @@ Calls: search_keywords(), ask_entry_changes() or menu()
 """
 
 def view_log(search, keyword=None, *widgets):
-
+    from menu_screen import menu
+    from searching import search_keywords
+    from changes import ask_entry_changes
+   # from interface import ask_entry_changes
     destroy(*widgets)
 
     # if keyword is None and we want to allow the user to search
@@ -75,7 +79,7 @@ def view_log(search, keyword=None, *widgets):
         search_keywords(False, *widgets)
 
     # user has searched but no search results popped up
-    elif search == True and vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}}) == 0:
+    elif search == True and global_vars.vol.count_documents({'details': {'$regex': keyword, '$options': 'i'}}) == 0:
         no_entries(True)
 
     try:
@@ -190,5 +194,20 @@ def view_log(search, keyword=None, *widgets):
     except Exception as e:
         print(e)
 
+def view_additional_notes(result, keyword, *widgets):
+    destroy(*widgets)
 
+    if len(result['others'].strip()) == 0:
+        additional_details = "There are no additional details added."
+    else:
+        additional_details = result['others']
+
+    additional_notes = Label(global_vars.root, text = "Additional notes:\n\n " + additional_details)
+    additional_notes.place(x=global_vars.root.winfo_width()/2 - 50, y=0)
+
+    go_back_button = Button(root, text = "Go back", 
+        command = lambda: ask_entry_changes(result, keyword, additional_notes, go_back_button))
+    go_back_button.place(x=global_vars.root.winfo_width()/2 - 15, y=global_vars.root.winfo_height() - 50)
+
+    configure(3, 1)
 #global_vars.initialize()
