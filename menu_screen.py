@@ -1,9 +1,9 @@
 import global_vars
 from imports import *
-from others import *
-from view import *
-from add import *
-
+from collections_related import delete_collection
+from others import destroy, create_frame, configure
+from view import view_log, view_which_log
+from add import add_details
 
 """
 Displays the menu where there are two buttons for the user to select from:
@@ -18,7 +18,8 @@ Output: None
 Calls: add_details() or view_log() or view_which_log()
 """
 def menu(collection, *widgets):
-    from collections_related import delete_collection
+    
+
 
     destroy(*widgets)
 
@@ -27,8 +28,8 @@ def menu(collection, *widgets):
     if isinstance(collection, str):
         global_vars.vol = global_vars.db[collection]
         string_collection = collection
-    else:
-        global_vars.vol = collection
+    #else:
+     #   global_vars.vol = collection
 
     db_label = Label(global_vars.root, text="Collection Name: " + string_collection, font="Helvetica 18 bold")
     db_label.place(x=global_vars.root.winfo_width()/3 - 10, y=0)

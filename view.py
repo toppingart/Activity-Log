@@ -2,19 +2,16 @@ from others import *
 from imports import *
 import global_vars
 import searching
-#import menu_screen
-
 
 """
 The date(s), details of the experience/activity, and the hour(s) are displayed on the screen.
 
 Input: 
+- filter_col: Noneif we're not filtering collections. Otherwise, it's the keyword(s) used to filter the collections.
 - Any number of widgets to be destroyed (from menu())
 
-Output: None
 Calls: access_collection(), create_new_collection() or search_keywords()
 """
-
 def view_which_log(filter_col, *widgets):
     import collections_related
 
@@ -74,6 +71,7 @@ def view_log(search, keyword=None, *widgets):
    # from interface import ask_entry_changes
     destroy(*widgets)
 
+    #print(type(global_vars.vol))
     # if keyword is None and we want to allow the user to search
     if not isinstance(keyword,str) and search == True:
         search_keywords(False, *widgets)
@@ -162,6 +160,7 @@ def view_log(search, keyword=None, *widgets):
 
                     for j in range(0, columns):
                         buttons[i][j] = Button(frame_buttons, bg = 'white', fg='black', font="Helvetica 9", height = 10, width=10, 
+                            activebackground='white',
                             text= 'date: ' + date_display + '\n' + 
                             'details: ' + results[i]['details'].strip('\n') + '\n' + 'hours: ' + str(results[i]['hours']),
                             command = lambda i=i: ask_entry_changes(results[i], keyword, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
@@ -195,6 +194,9 @@ def view_log(search, keyword=None, *widgets):
         print(e)
 
 def view_additional_notes(result, keyword, *widgets):
+
+    from changes import ask_entry_changes
+
     destroy(*widgets)
 
     if len(result['others'].strip()) == 0:
@@ -205,9 +207,8 @@ def view_additional_notes(result, keyword, *widgets):
     additional_notes = Label(global_vars.root, text = "Additional notes:\n\n " + additional_details)
     additional_notes.place(x=global_vars.root.winfo_width()/2 - 50, y=0)
 
-    go_back_button = Button(root, text = "Go back", 
+    go_back_button = Button(global_vars.root, text = "Go back", 
         command = lambda: ask_entry_changes(result, keyword, additional_notes, go_back_button))
     go_back_button.place(x=global_vars.root.winfo_width()/2 - 15, y=global_vars.root.winfo_height() - 50)
 
     configure(3, 1)
-#global_vars.initialize()
