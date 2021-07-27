@@ -127,8 +127,7 @@ def view_log(search, keyword=None, *widgets):
                 vsb = Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
                 vsb.grid(row=0, column=1, sticky='ns')
                 canvas.configure(yscrollcommand=vsb.set)
-                bg=ImageTk.PhotoImage(file="394901.png")
-                canvas.create_image(0,0, image=bg, tag='img', anchor='nw')
+  
 
                 # Create a frame to contain the buttons
                 frame_buttons = Frame(canvas, bg='lavender blush')
