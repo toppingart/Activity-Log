@@ -99,7 +99,7 @@ def view_log(search, keyword=None, *widgets):
 
             if (count >= 1): # 1 or more entries
 
-                results = results.sort([("date", 1), ("startdate", 1)])
+                results = results.sort([("startdate", 1), ("date", 1)])
 
                 row_num = 0
                 frame_main = Frame(global_vars.my_canvas, width=800, height=400, bg='light pink')
@@ -199,6 +199,30 @@ def view_additional_notes(result, keyword, *widgets):
 
     destroy(*widgets)
 
+    label_background = Label(global_vars.root)
+    label_background.grid(row=0, column=1)
+
+    additional_text = Text(label_background, height = 20)
+    additional_text.grid(row=0, column=0)
+
+    y_scrollbar = Scrollbar(label_background, command = additional_text.yview)
+    additional_text.config(yscrollcommand=y_scrollbar.set)
+
+    y_scrollbar.grid(row=0, column=1, sticky = 'ns')
+
+    additional_text.insert(1.0, result['others'])
+    additional_text.configure(state='disabled', wrap=WORD)
+
+    
+    # allows you to use arrow keys
+    additional_text.bind("<Up>",    lambda event: additional_text.yview_scroll(-1, "units"))
+    additional_text.bind("<Down>",  lambda event: additional_text.yview_scroll( 1, "units"))
+           
+    additional_text.bind_all("<MouseWheel>", lambda event: additional_text.yview_scroll(-1 * int((event.delta / 120)), "units"))
+    additional_text.focus_set()
+    additional_text.bind("<1>", lambda event: self.additional_text.focus_set())
+
+    """
     if len(result['others'].strip()) == 0:
         additional_details = "There are no additional details added."
     else:
@@ -206,9 +230,10 @@ def view_additional_notes(result, keyword, *widgets):
 
     additional_notes = Label(global_vars.root, text = "Additional notes:\n\n " + additional_details)
     additional_notes.place(x=global_vars.root.winfo_width()/2 - 50, y=0)
-
+    """
     go_back_button = Button(global_vars.root, text = "Go back", 
-        command = lambda: ask_entry_changes(result, keyword, additional_notes, go_back_button))
-    go_back_button.place(x=global_vars.root.winfo_width()/2 - 15, y=global_vars.root.winfo_height() - 50)
+            command = lambda: ask_entry_changes(result, keyword, label_background, additional_text, y_scrollbar,
+                go_back_button))
+    go_back_button.place(x=280, y=365)
 
     configure(3, 1)

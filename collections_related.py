@@ -63,6 +63,10 @@ Calls: view_which_log()
 def adds_new_collection(new_name, *widgets):
     from view import view_which_log
 
+    if new_name in global_vars.db.list_collection_names():
+        messagebox.showerror("Collection Name", "This name already exists.")
+        return
+
     # if the new collection name is not empty
     if len(new_name.strip()) != 0:
         frame = create_frame(1,1)
@@ -86,7 +90,9 @@ def adds_new_collection(new_name, *widgets):
         return
 
 def delete_collection(collection, *widgets):
+    from view import view_which_log
+
     answer = messagebox.askyesno('Delete Collection', 'Are you sure you want to delete this collection?')
     if answer == True:
         collection.drop()
-        view_which_log(None, None, *widgets) # user is prompted to select another collection
+        view_which_log(None, *widgets) # user is prompted to select another collection

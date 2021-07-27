@@ -1,4 +1,7 @@
 
+import global_vars
+from imports import *
+
 """
 Used to change the date (as a string) to a datetime object.
 
@@ -31,12 +34,6 @@ def check_date(date):
     else:
         raise ValueError # not valid (eg. 01/32/19)
 
-"""
-Sorts the results by date
-"""
-def filter_by_date(results, *widgets):
-    if var1.get() == 1:
-        results.sort('date', pymongo.DESCENDING)
-        return results
+
 
 

@@ -52,6 +52,13 @@ Input:
 Calls: view_which_log()
 """
 def search_with_input(entry, *widgets):
+
+    # if the user did not enter anything
+    if len(entry.strip()) == 0:
+        messagebox.showerror("Searching", "Please type something in the given space.")
+        return
+
+    from view import view_log
     destroy(*widgets)
 
     # wildcards are used in between the entry

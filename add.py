@@ -140,14 +140,17 @@ Calls: one_day_option() or multiple_days_option()
 """
 def add_dates(user_list, hours,*widgets):
     try:
-        int(hours) # checks if an integer has been entered 
+        if '.' in hours: # checks if hours is an int or a float
+            convert_hours = float(hours)
+        else:
+            convert_hours = int(hours)
     except:
         messagebox.showerror("Hours Error", "Please enter a number for your hours.")
         return # exits the function (so that the user can enter the number of hours again)
 
     destroy(*widgets)
 
-    user_list.append(int(hours)) # if hours is an int (is valid), it is added to the list of user inputs
+    user_list.append(convert_hours) # if hours is an int or a float (is valid), it is added to the list of user inputs
 
     frame = create_frame(0,1)
   
@@ -294,6 +297,8 @@ Calls: check_date() and successful_message()
 
 """
 def all_user_inputs(user_list, *widgets, **days):
+    from dates import check_date
+    from others import successful_message
 
     try:
         # add date(s)
@@ -306,7 +311,7 @@ def all_user_inputs(user_list, *widgets, **days):
                 check_date(days["startdate"])
                 check_date(days["enddate"])
 
-                if (datetime.strptime(day['startdate'], "%m/%d/%y") >= (datetime.strptime(day['enddate']))):
+                if (datetime.strptime(days['startdate'], "%m/%d/%y") >= (datetime.strptime(days['enddate'], "%m/%d/%y"))):
                     raise ValueError
 
                 #['ad\n', '\n', 5]
@@ -319,13 +324,12 @@ def all_user_inputs(user_list, *widgets, **days):
                     user_list.append(days["enddate"]) # if statement prevents enddate from being added again
                 break
 
-    except NameError as n:
-        messagebox.showerror("Dates Error", "Please enter valid date(s)")
-
     except ValueError as v:
+        print(v)
         messagebox.showerror("Dates Error", "Please enter valid date(s)")
 
     except Exception as e:
+        print(e)
         messagebox.showerror("Dates Error", "Please fill in both the start date and end date.")
 
     else:

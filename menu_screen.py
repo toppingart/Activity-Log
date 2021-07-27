@@ -54,7 +54,7 @@ def menu(collection, *widgets):
     another_collection_button.grid(row=3, column=1, padx=50, pady=10)
 
     delete_collection_button = Button(frame1, text = "Delete this collection", 
-        command = lambda: delete_collection(menu_label, add_record_1, view_act_log, frame1, 
+        command = lambda: delete_collection(global_vars.vol, menu_label, add_record_1, view_act_log, frame1, 
             another_collection_button, delete_collection_button, db_label))
     delete_collection_button.grid(row=4, column=1, padx=50, pady=10)
 

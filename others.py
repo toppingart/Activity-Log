@@ -36,6 +36,8 @@ Input:
 Calls: to_datetime() and menu()
 """
 def successful_message(user_list, type_of_success, *widgets):
+    from menu_screen import menu
+    from dates import to_datetime
 
     try:
         destroy(*widgets)

@@ -41,30 +41,48 @@ def ask_entry_changes(result, keyword, *widgets):
     where_to_edit = Label(frame, text="What part would you like to change?")
     where_to_edit.grid(row=1, column=1, padx=10, pady=10)
 
-    details_button = Button(frame, text = "Details", command = lambda: add_details(True, result, keyword,
-        where_to_edit, details_button, hours_button, dates_button, go_back_button, frame, additional))
+    details_button = Button(frame, text = "Details", 
+        command = lambda: add_details(True, result, keyword,
+        where_to_edit, details_button, hours_button, dates_button, go_back_button, 
+        frame, additional, delete_entr_button))
     details_button.grid(row=2, column=0, padx=10, pady=10)
 
     hours_button = Button(frame, text = "Hours", command = lambda: add_hours(result, None, None,
-        where_to_edit, details_button, hours_button, dates_button, go_back_button, frame, additional))
+        where_to_edit, details_button, hours_button, dates_button, go_back_button, 
+        frame, additional, delete_entry_button))
     hours_button.grid(row=2, column=1, padx=10, pady=10)
 
     dates_button = Button(frame, text = "Date(s)", command = lambda: make_date_changes(result,
-        where_to_edit, details_button, hours_button, dates_button, go_back_button, frame, additional))
+        where_to_edit, details_button, hours_button, dates_button, go_back_button, 
+        frame, additional, delete_entry_button))
     dates_button.grid(row=2, column=2, padx=10, pady=10)
 
-    if keyword != None:
-        search = True # if a keyword exists, this means that the user has entered a keyword before
-    else:
-        search = False
-
+   
     go_back_button = Button(frame, text = "Go back", 
-        command = lambda: view_log(search, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button, frame, additional))
+        command = lambda: view_log(False, keyword, where_to_edit, details_button, hours_button, dates_button, 
+            go_back_button, frame, additional, delete_entry_button))
     go_back_button.grid(row=3, column=1, padx=10, pady=10)
 
     additional = Button(global_vars.root, text = "View Additional Notes", 
-        command = lambda: view_additional_notes(result, keyword, where_to_edit, details_button, hours_button, dates_button, go_back_button, frame, additional))
+        command = lambda: view_additional_notes(result, keyword, where_to_edit, details_button, hours_button, 
+            dates_button, go_back_button, frame, additional, delete_entry_button))
     additional.place(x=300, y=300)
+
+    delete_entry_button = Button(global_vars.root, text = "Delete this entry", command = lambda: delete_entry(result, keyword,
+        where_to_edit, details_button, hours_button, dates_button, go_back_button, frame, additional, delete_entry_button))
+    delete_entry_button.place(x=300, y=350)
+
+
+
+def delete_entry(result,keyword, *widgets):
+    from view import view_log
+    
+    answer = messagebox.askyesno("Delete Entry", "Are you sure you want to delete this entry?")
+    if answer == True:
+        global_vars.vol.delete_one({'_id': result['_id']})
+        view_log(False, keyword, *widgets) # user is prompted to select another collection
+
+
 
 """
 Will take the appropiate action depending on what part ot the entry the user wants to make edits to
@@ -79,6 +97,7 @@ input:
 Calls: successful_message(), check_date(), to_datetime()
 """
 def types_of_changes(type_of_change, edited_entry, edited_entry_2, result, *widgets):
+    from dates import check_date, to_datetime
 
     destroy(*widgets)
     
@@ -88,12 +107,12 @@ def types_of_changes(type_of_change, edited_entry, edited_entry_2, result, *widg
         successful_message(None, 2)
 
     elif type_of_change == 2: # edit hours
-        vol.update_one({'_id': result['_id']}, {'$set': {'hours': edited_entry}})
+        global_vars.vol.update_one({'_id': result['_id']}, {'$set': {'hours': edited_entry}})
         successful_message(None, 2)
 
     elif type_of_change == 3: # edit single date
         check_date(edited_entry)
-        vol.update_one({'_id': result['_id']}, {'$set': {'date': edited_entry}})
+        global_vars.vol.update_one({'_id': result['_id']}, {'$set': {'date': edited_entry}})
         to_datetime([result])
         successful_message(None, 2)
 
