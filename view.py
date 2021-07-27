@@ -201,7 +201,7 @@ def view_additional_notes(result, keyword, *widgets):
     label_background = Label(global_vars.root)
     label_background.grid(row=0, column=1)
 
-    additional_text = Text(label_background, height = 20)
+    additional_text = Text(label_background, height = 17)
     additional_text.grid(row=0, column=0)
 
     y_scrollbar = Scrollbar(label_background, command = additional_text.yview)
