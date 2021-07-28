@@ -19,17 +19,13 @@ Calls: add_details() or view_log() or view_which_log()
 """
 def menu(collection, *widgets):
     
-
-
     destroy(*widgets)
 
     global string_collection
-    #global vol
+
     if isinstance(collection, str):
         global_vars.vol = global_vars.db[collection]
         string_collection = collection
-    #else:
-     #   global_vars.vol = collection
 
     db_label = Label(global_vars.root, text="Collection Name: " + string_collection, font="Helvetica 18 bold")
     db_label.place(x=global_vars.root.winfo_width()/3 - 10, y=0)

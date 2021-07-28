@@ -127,6 +127,10 @@ def view_log(search, keyword=None, *widgets):
                 vsb = Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
                 vsb.grid(row=0, column=1, sticky='ns')
                 canvas.configure(yscrollcommand=vsb.set)
+
+                hsb = Scrollbar(frame_canvas, orient="horizontal", command=canvas.xview)
+                hsb.grid(row=1, column=0, sticky='ew')
+                canvas.configure(xscrollcommand=hsb.set)
   
 
                 # Create a frame to contain the buttons
@@ -160,8 +164,8 @@ def view_log(search, keyword=None, *widgets):
                     for j in range(0, columns):
                         buttons[i][j] = Button(frame_buttons, bg = 'white', fg='black', font="Helvetica 9", height = 10, width=10, 
                             activebackground='white',
-                            text= 'date: ' + date_display + '\n' + 
-                            'details: ' + results[i]['details'].strip('\n') + '\n' + 'hours: ' + str(results[i]['hours']),
+                            text= 'date: ' + date_display + '\n\n' + 
+                            'details: ' + results[i]['details'].strip('\n') + '\n\n' + 'hours: ' + str(results[i]['hours']),wraplength=600,
                             command = lambda i=i: ask_entry_changes(results[i], keyword, buttons, frame_main, frame_canvas, canvas, vsb, frame_buttons, 
                         menu_button, search_keywords_button))
                         buttons[i][j].grid(row=i, column=j, ipadx=310, ipady=50,pady=50)

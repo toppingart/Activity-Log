@@ -44,7 +44,7 @@ def ask_entry_changes(result, keyword, *widgets):
     details_button = Button(frame, text = "Details", 
         command = lambda: add_details(True, result, keyword,
         where_to_edit, details_button, hours_button, dates_button, go_back_button, 
-        frame, additional, delete_entr_button))
+        frame, additional, delete_entry_button))
     details_button.grid(row=2, column=0, padx=10, pady=10)
 
     hours_button = Button(frame, text = "Hours", command = lambda: add_hours(result, None, None,
