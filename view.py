@@ -128,11 +128,6 @@ def view_log(search, keyword=None, *widgets):
                 vsb.grid(row=0, column=1, sticky='ns')
                 canvas.configure(yscrollcommand=vsb.set)
 
-                hsb = Scrollbar(frame_canvas, orient="horizontal", command=canvas.xview)
-                hsb.grid(row=1, column=0, sticky='ew')
-                canvas.configure(xscrollcommand=hsb.set)
-  
-
                 # Create a frame to contain the buttons
                 frame_buttons = Frame(canvas, bg='lavender blush')
 
