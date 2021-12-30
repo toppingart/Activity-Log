@@ -140,7 +140,7 @@ Calls: one_day_option() or multiple_days_option()
 """
 def add_dates(user_list, hours,*widgets):
     try:
-        if '.' in hours: # checks if hours is an int or a float
+        if '.' in str(hours): # checks if hours is an int or a float
             convert_hours = float(hours)
         else:
             convert_hours = int(hours)
