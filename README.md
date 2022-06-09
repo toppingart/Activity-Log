@@ -17,9 +17,12 @@ Adding a record involves
 * How many hours spent doing this activity
 * Date of the activity (mm/dd/yy)
 
-![6j5j8l](https://user-images.githubusercontent.com/56778279/172937957-daeefefa-ff41-40d5-9dab-60faeaa3f6f7.gif)
+_Writing out the details and additional notes about an activity_
 
-### Viewing the Activity Log
+![6j5j3i](https://user-images.githubusercontent.com/56778279/172941560-69dee833-ba93-40e6-804c-74d2d93c7e2f.gif)
+
+
+### Viewing the Activity Log:
 **Search using keywords instead:**
 Searches for a specific record using keywords found in the details of an activity
 
