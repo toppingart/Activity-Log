@@ -4,4 +4,4 @@ from tkinter import *
 from datetime import datetime, date
 import sys
 from tkinter.font import BOLD
-from PIL import Image, ImageTk
+#from PIL import Image, ImageTk
