@@ -19,9 +19,9 @@ def view_which_log(filter_col, *widgets):
 
     choose_col = Label(global_vars.root, text = "Which collection would you like to look at?", font="Helvetica 18 bold")
     choose_col.place(relx=0.5, rely=0, anchor="n")
+    collection_list = global_vars.db.list_collection_names()
 
     if filter_col == None:
-        collection_list = list(global_vars.db.list_collection_names())
         collection_list.sort()
     else:
         collection_list = filter_col
@@ -31,21 +31,24 @@ def view_which_log(filter_col, *widgets):
     combo_box = ttk.Combobox(global_vars.root, values=collection_list, state="readonly")
     combo_box.config(height=5)
     combo_box.place(x=250, y=100)
-    combo_box.current(0)
+   
 
   
-    new_col = Button(global_vars.root, text = "Add new collection instead", command = lambda: collections_related.create_new_collection(choose_col, combo_box, new_col, search_col, access_button))
+    new_col = Button(global_vars.root, text = "Add new collection instead", command = lambda: collections_related.create_new_collection(choose_col, combo_box, new_col))
     new_col.place(x=150, y=330)
 
+    if len(collection_list) > 0:
 
-    search_col = Button(global_vars.root, text = "Search for collections by keyword", 
-        command = lambda: searching.search_keywords(True,choose_col, combo_box, new_col, search_col, access_button))
-    search_col.place(x=380, y=330)
+        combo_box.current(0)
+        
+        search_col = Button(global_vars.root, text = "Search for collections by keyword", 
+            command = lambda: searching.search_keywords(True,choose_col, combo_box, new_col, search_col, access_button))
+        search_col.place(x=380, y=330)
 
 
-    access_button = Button(global_vars.root, text = "Access this collection", command = lambda: collections_related.access_collection(combo_box.get(), combo_box, new_col,
-        search_col, access_button, choose_col))
-    access_button.place(x=250, y=150)
+        access_button = Button(global_vars.root, text = "Access this collection", command = lambda: collections_related.access_collection(combo_box.get(), combo_box, new_col,
+            search_col, access_button, choose_col))
+        access_button.place(x=250, y=150)
 
 
     #configure(5,5)
