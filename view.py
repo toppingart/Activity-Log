@@ -1,5 +1,6 @@
 from others import *
 from imports import *
+from backups import options
 import global_vars
 import searching
 
@@ -35,7 +36,7 @@ def view_which_log(filter_col, *widgets):
 
   
     new_col = Button(global_vars.root, text = "Add new collection instead", command = lambda: collections_related.create_new_collection(choose_col, combo_box, new_col))
-    new_col.place(x=150, y=330)
+    new_col.place(x=100, y=330)
 
     if len(collection_list) > 0:
 
@@ -43,12 +44,15 @@ def view_which_log(filter_col, *widgets):
         
         search_col = Button(global_vars.root, text = "Search for collections by keyword", 
             command = lambda: searching.search_keywords(True,choose_col, combo_box, new_col, search_col, access_button))
-        search_col.place(x=380, y=330)
+        search_col.place(x=350, y=330)
 
 
         access_button = Button(global_vars.root, text = "Access this collection", command = lambda: collections_related.access_collection(combo_box.get(), combo_box, new_col,
             search_col, access_button, choose_col))
         access_button.place(x=250, y=150)
+
+        collection_options = Button(global_vars.root, text = "Options", command = lambda: options(choose_col, combo_box, new_col, search_col, access_button, collection_options))
+        collection_options.place(x=580, y=330)
 
 
     #configure(5,5)
