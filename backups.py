@@ -45,13 +45,11 @@ def dump(path):
             for doc in global_vars.db[collection].find():
                 f.write(bson.BSON.encode(doc))
 
-
 def restore(path):
     collections_list = global_vars.db.list_collection_names()
     for collection in os.listdir(path):
         collection_name = collection.split('.')[0]
         if collection.endswith('.bson') and collection_name not in collections_list:
-            print(collection)
             with open(os.path.join(path, collection), 'rb+') as f:
                 global_vars.db[collection_name].insert_many(bson.decode_all(f.read()))
       
