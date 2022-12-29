@@ -26,7 +26,7 @@ def ask_for_path(selected_option, *widgets):
     from view import view_which_log
 
     destroy(*widgets)
-    file_path = filedialog.askdirectory(title="Choose where you want to put these backups")
+    file_path = filedialog.askdirectory(title="Select directory")
     if selected_option == "create":
         dump(file_path)
         view_which_log(None)
