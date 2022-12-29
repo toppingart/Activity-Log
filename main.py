@@ -8,7 +8,7 @@ def main():
     view_which_log(None) # prompts user to select a collection
     global_vars.root.mainloop()
 
-    path = r'C:\Users\USER\Documents\volunteer'
+    #path = r'C:\Users\USER\Documents\volunteer'
     #dump(path)
     #restore(path)
 
