@@ -2,11 +2,19 @@
 https://www.python.org/
 
 2. Download MongoDB (could also download MongoDB Compass), and then connect:
+<<<<<<< HEAD
 
 For Windows 11: https://www.youtube.com/watch?v=Ph1Z97X6xno
+=======
+https://www.youtube.com/watch?v=Ph1Z97X6xno
+>>>>>>> ea0aa3dc6978721cbe0d6cc1b61c7c4c68d60f88
 
 3. 
 pip install pymongo
 pip install tk
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> ea0aa3dc6978721cbe0d6cc1b61c7c4c68d60f88
