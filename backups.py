@@ -27,12 +27,14 @@ def ask_for_path(selected_option, *widgets):
 
     destroy(*widgets)
     file_path = filedialog.askdirectory(title="Select directory")
-    if selected_option == "create":
-        dump(file_path)
-        view_which_log(None)
-    else:
-        restore(file_path)
-        view_which_log(None)
+    if len(file_path.strip()) != 0 :
+        if selected_option == "create":
+            dump(file_path)
+            view_which_log(None)
+        else:
+            restore(file_path)
+            view_which_log(None)
+    view_which_log(None)
 
 
 # conn - client, db_name = db, collections - use list collection names
